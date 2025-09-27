@@ -1,0 +1,22 @@
+# Node / TypeScript
+node_modules/
+out/
+*.log
+npm-debug.log*
+yarn-error.log*
+.vscode-test/
+
+# VS Code
+.history/
+*.code-workspace
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Packages
+*.vsix
+
+# Coverage / tooling (if added later)
+coverage/
+.tmp/
