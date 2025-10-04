@@ -4,7 +4,7 @@
   "description": "Make large codebases easier to navigate",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.104.0"
+    "vscode": "^1.101.0"
   },
   "categories": [
     "Other"
@@ -13,10 +13,7 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "navify.helloWorld",
-        "title": "Hello World"
-      }
+      { "command": "navify.searchFiles", "title": "Navify: Fuzzy File Search" }
     ]
   },
   "scripts": {
@@ -28,14 +25,14 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.104.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/vscode": "^1.101.0",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
-    "eslint": "^9.34.0",
-    "typescript": "^5.9.2",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.34.0",
+    "typescript": "^5.9.2"
   }
 }
