@@ -1,71 +1,31 @@
-# navify README
+# Navify
 
-This is the README for your extension "navify". After writing up a brief description, we recommend including the following sections.
+🚀 A lightweight VS Code extension to make navigating large codebases faster and easier.  
 
-## Features
-
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+Navify adds smarter search, quick navigation aids, and simple productivity boosts — without the bloat.
 
 ---
 
-## Following extension guidelines
+## ✨ Features
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+### In Development
+- 🔎 **Fuzzy filename search** – lightning-fast search with preview lines under results.  
+- 📂 **Scoped search** – restrict results by folder or file extension.  
+- 🕑 **Search history** – quickly rerun or revisit past searches.  
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+### In Backlog
+- ⭐ **Bookmarks / pinned files** – mark important files for easy access.  
+- 🧭 **Breadcrumb trail** – navigate back/forward like a browser.  
+- 🔄 **Jump-to-related file** – e.g. `foo.ts` ↔ `foo.test.ts`.  
+- 📝 **Quick diff viewer** – open a Git diff against HEAD in one click.  
 
-## Working with Markdown
+---
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+## ⚙️ Installation
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+1. Install from the [VS Code Marketplace](#) (coming soon).  
+2. Or clone this repo and run:  
+   ```bash
+   npm install
+   npm run compile
+   code --install-extension navify-0.0.1.vsix
