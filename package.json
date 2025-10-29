@@ -9,13 +9,48 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
-  "main": "./out/extension.js",
+  "activationEvents": [
+    "onView:navify.searchView",
+    "onCommand:navify.focus",
+    "onCommand:navify.searchFiles"
+  ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "navify-container",
+          "title": "Navify",
+          "icon": "media/logo.png"
+        }
+      ]
+    },
+    "views": {
+      "navify-container": [
+        {
+          "type": "webview",
+          "id": "navify.searchView",
+          "name": "File Search",
+          "icon": "media/logo.png"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "navify.searchView",
+        "contents": "Start typing to search your workspace.\n[Open Navify](command:navify.focus)"
+      }
+    ],
     "commands": [
-      { "command": "navify.searchFiles", "title": "Navify: Fuzzy File Search" }
-    ]
+      { "command": "navify.searchFiles", "title": "Navify: Fuzzy File Search" },
+      { "command": "navify.focus", "title": "Navify: Focus File Search" }
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "navify.focus" }
+      ]
+    }
   },
+  "main": "./out/extension.js",
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
