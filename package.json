@@ -6,6 +6,66 @@
   "engines": {
     "vscode": "^1.101.0"
   },
+  "configuration": {
+  "title": "Navify",
+  "properties": {
+    "navify.excludeGlobs": {
+      "type": "array",
+      "default": [
+        "**/.git/**",
+        "**/.hg/**",
+        "**/.svn/**",
+        "**/node_modules/**",
+        "**/bower_components/**",
+        "**/.vscode/**",
+        "**/.idea/**",
+        "**/.vs/**",
+        "**/.DS_Store",
+        "**/*.log",
+        "**/*.tmp",
+        "**/*.bak",
+        "**/*.map",
+        "**/dist/**",
+        "**/build/**",
+        "**/out/**",
+        "**/coverage/**",
+        "**/.cache/**",
+        "**/.turbo/**",
+        "**/.next/**",
+        "**/.parcel-cache/**",
+        "**/.rollup.cache/**",
+        "**/target/**",
+        "**/bin/**",
+        "**/obj/**",
+        "**/.terraform/**",
+        "**/.venv/**",
+        "**/venv/**",
+        "**/__pycache__/**",
+        "**/*.pyc",
+        "**/.mypy_cache/**",
+        "**/.pytest_cache/**"
+      ],
+      "description": "Extra glob patterns Navify should exclude when indexing files.",
+      "items": { "type": "string" }
+    },
+    "navify.respectWorkspaceExcludes": {
+      "type": "boolean",
+      "default": true,
+      "description": "Also use workspace 'files.exclude' and 'search.exclude' when building the index."
+    },
+    "navify.maxResults": {
+      "type": "number",
+      "default": 100000,
+      "minimum": 1000,
+      "description": "Maximum number of files to scan when building the index."
+    },
+    "navify.hideHiddenFiles": {
+      "type": "boolean",
+      "default": true,
+      "description": "Hide dotfiles and dot-directories from results unless directly matched."
+    }
+  }
+},
   "categories": [
     "Other"
   ],
