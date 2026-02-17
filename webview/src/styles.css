@@ -1,0 +1,97 @@
+:root{
+  --fg: var(--vscode-foreground);
+  --bg: var(--vscode-sideBar-background);
+  --border: var(--vscode-dropdown-border);
+  --inputBg: var(--vscode-input-background);
+  --inputFg: var(--vscode-input-foreground);
+  --accent: var(--vscode-focusBorder);
+}
+
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--vscode-font-family);
+  color:var(--fg);
+  background:var(--bg);
+}
+
+.root{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+}
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:2;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:10px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+
+.logo{
+  width:18px;
+  height:18px;
+  opacity:.9;
+}
+
+.search{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 8px;
+  border:1px solid var(--border);
+  border-radius:4px;
+  background:var(--inputBg);
+  color:var(--inputFg);
+}
+
+.search input{
+  flex:1;
+  border:none;
+  outline:none;
+  background:transparent;
+  color:inherit;
+  font-family:inherit;
+  font-size:inherit;
+}
+
+.results{
+  padding:8px;
+}
+
+.item{
+  padding:6px 8px;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.item:hover{
+  background:rgba(127,127,127,.15);
+}
+
+.label{
+  font-weight:600;
+}
+
+.path{
+  opacity:.8;
+  font-size:12px;
+}
+
+.empty{
+  padding:16px;
+  opacity:.7;
+}
+
+.smallHint{
+  margin-top:6px;
+  font-size:12px;
+  opacity:.75;
+}
