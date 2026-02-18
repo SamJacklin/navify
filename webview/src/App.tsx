@@ -1,20 +1,26 @@
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { onMessage, post, type ResultItem } from "./api";
+import { FileList } from "./components/FileList";
+import { useKeyboardNav } from "./hooks/useKeyboardNav";
 
 type Tab = "search" | "explorer";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<Tab>("search");
   const [q, setQ] = useState("");
-  const [items, setItems] = useState<ResultItem[]>([]);
+  const [searchResults, setSearchResults] = useState<ResultItem[]>([]);
+  const [recentFiles, setRecentFiles] = useState<ResultItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const resultsRef = useRef<HTMLDivElement>(null);
 
   const logoSrc = (typeof window !== "undefined" && window.__NAVIFY_LOGO__)
     ? window.__NAVIFY_LOGO__
     : "";
+
+  // Determine which list to display
+  const hasQuery = q.trim().length > 0;
+  const displayItems = hasQuery ? searchResults : recentFiles;
 
   // Focus input on mount and when switching to search tab
   useEffect(() => {
@@ -23,23 +29,29 @@ export function App() {
     }
   }, [activeTab]);
 
-  // Receive results
+  // Receive messages from extension
   useEffect(() => {
     onMessage((msg) => {
       if (msg?.type === "RESULTS") {
         const next = Array.isArray(msg.items) ? msg.items : [];
-        setItems(next);
+        setSearchResults(next);
         setSelectedIndex(0);
         setIsSearching(false);
+      } else if (msg?.type === "RECENT_FILES") {
+        const next = Array.isArray(msg.items) ? msg.items : [];
+        setRecentFiles(next);
+        if (!hasQuery) {
+          setSelectedIndex(0);
+        }
       }
     });
-  }, []);
+  }, [hasQuery]);
 
   // Debounced search
   useEffect(() => {
     const query = q.trim();
     if (!query) {
-      setItems([]);
+      setSearchResults([]);
       setSelectedIndex(0);
       setIsSearching(false);
       return;
@@ -53,61 +65,48 @@ export function App() {
     return () => window.clearTimeout(handle);
   }, [q]);
 
-  const list = useMemo(() => items, [items]);
-
-  // Keyboard navigation for results
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (activeTab !== "search" || list.length === 0) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, list.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === "Enter" && list[selectedIndex]) {
-      e.preventDefault();
-      post({ type: "OPEN", uri: list[selectedIndex].uri });
-    }
-  };
-
-  // Scroll selected item into view
-  useEffect(() => {
-    if (resultsRef.current && list.length > 0) {
-      const selectedEl = resultsRef.current.querySelector(`[data-index="${selectedIndex}"]`);
-      if (selectedEl) {
-        selectedEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  // Keyboard navigation
+  useKeyboardNav({
+    enabled: activeTab === "search",
+    itemCount: displayItems.length,
+    selectedIndex,
+    onSelectedIndexChange: setSelectedIndex,
+    onEnter: () => {
+      const item = displayItems[selectedIndex];
+      if (item) {
+        post({ type: "OPEN", uri: item.uri });
       }
     }
-  }, [selectedIndex, list]);
+  });
 
-  const emptyMessage = () => {
-    if (!q.trim()) {
-      return (
-        <div class="empty">
-          <div class="empty-title">Search files in your workspace</div>
-          <div class="empty-hint">Start typing to find files by name or path</div>
-        </div>
-      );
+  // Get appropriate empty state
+  const getEmptyState = () => {
+    if (hasQuery) {
+      if (isSearching) {
+        return { title: "Searching..." };
+      }
+      return { title: "No files found", hint: "Try a different search term" };
     }
-    if (isSearching) {
-      return (
-        <div class="empty">
-          <div class="empty-title">Searching...</div>
-        </div>
-      );
-    }
-    return (
-      <div class="empty">
-        <div class="empty-title">No files found</div>
-        <div class="empty-hint">Try a different search term</div>
-      </div>
-    );
+    // No query - show recent files empty state
+    return { title: "No recent files", hint: "Files you open will appear here" };
   };
 
+  // Get hint text
+  const getHintText = () => {
+    if (hasQuery && searchResults.length > 0) {
+      return `${searchResults.length} ${searchResults.length === 1 ? "file" : "files"} · ↑↓ to navigate · Enter to open`;
+    }
+    if (!hasQuery && recentFiles.length > 0) {
+      return "↑↓ to navigate · Enter to open";
+    }
+    return null;
+  };
+
+  const hintText = getHintText();
+
   return (
-    <div class="root" onKeyDown={handleKeyDown}>
-      {/* Header with logo and workspace name */}
+    <div class="root">
+      {/* Header with logo */}
       <div class="header">
         <div class="header-content">
           <img class="logo" src={logoSrc} alt="Navify" />
@@ -168,34 +167,23 @@ export function App() {
                 </button>
               )}
             </div>
-            {list.length > 0 && (
-              <div class="search-hint">
-                {list.length} {list.length === 1 ? "file" : "files"} · ↑↓ to navigate · Enter to open
-              </div>
-            )}
+            {hintText && <div class="search-hint">{hintText}</div>}
           </div>
 
-          {/* Results list */}
-          <div class="results" ref={resultsRef} role="listbox">
-            {list.length === 0 ? (
-              emptyMessage()
-            ) : (
-              list.map((item, index) => (
-                <div
-                  key={item.uri}
-                  data-index={index}
-                  class={`result-item ${index === selectedIndex ? "selected" : ""}`}
-                  role="option"
-                  aria-selected={index === selectedIndex}
-                  onClick={() => post({ type: "OPEN", uri: item.uri })}
-                  onMouseEnter={() => setSelectedIndex(index)}
-                >
-                  <div class="result-label">{item.label}</div>
-                  <div class="result-path">{item.path}</div>
-                </div>
-              ))
-            )}
-          </div>
+          {/* Section header for recent files */}
+          {!hasQuery && recentFiles.length > 0 && (
+            <div class="section-header">
+              <h2 class="section-title">Recently Opened</h2>
+            </div>
+          )}
+
+          {/* File list (search results or recent files) */}
+          <FileList
+            items={displayItems}
+            selectedIndex={selectedIndex}
+            onSelectedIndexChange={setSelectedIndex}
+            emptyState={getEmptyState()}
+          />
         </div>
       ) : (
         <div class="tab-content" role="tabpanel">

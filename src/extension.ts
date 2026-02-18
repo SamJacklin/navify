@@ -6,6 +6,8 @@ type FileItem = vscode.QuickPickItem & { uri: vscode.Uri };
 
 let fileIndex: vscode.Uri[] = [];
 const previewCache = new Map<string, string>(); // key: uri.toString()
+let recentFiles: vscode.Uri[] = []; // Most recent first
+const MAX_RECENT_FILES = 20;
 
 export async function activate(context: vscode.ExtensionContext) {
   buildFileIndex().catch((err) => console.error("[Navify] index error:", err));
@@ -16,6 +18,30 @@ export async function activate(context: vscode.ExtensionContext) {
       webviewOptions: { retainContextWhenHidden: true }
     })
   );
+
+  // Track recently opened files
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor?.document.uri) {
+        addRecentFile(editor.document.uri);
+        provider.sendRecentFiles();
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument((doc) => {
+      if (doc.uri) {
+        addRecentFile(doc.uri);
+        provider.sendRecentFiles();
+      }
+    })
+  );
+
+  // Initialize with currently active editor
+  if (vscode.window.activeTextEditor?.document.uri) {
+    addRecentFile(vscode.window.activeTextEditor.document.uri);
+  }
 
   context.subscriptions.push(
     vscode.commands.registerCommand("navify.searchFiles", async () => {
@@ -42,6 +68,30 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 }
 
+function addRecentFile(uri: vscode.Uri): void {
+  // Only track workspace files (not settings, output, etc.)
+  if (uri.scheme !== "file") {
+    return;
+  }
+
+  // Must be in a workspace folder
+  if (!vscode.workspace.getWorkspaceFolder(uri)) {
+    return;
+  }
+
+  // Remove if already exists (dedupe)
+  const uriString = uri.toString();
+  recentFiles = recentFiles.filter((u) => u.toString() !== uriString);
+
+  // Add to front
+  recentFiles.unshift(uri);
+
+  // Cap to max
+  if (recentFiles.length > MAX_RECENT_FILES) {
+    recentFiles = recentFiles.slice(0, MAX_RECENT_FILES);
+  }
+}
+
 export function deactivate() {
   // no-op
 }
@@ -49,10 +99,13 @@ export function deactivate() {
 /* ---------------- Sidebar (Webview View) ---------------- */
 
 class NavifySearchViewProvider implements vscode.WebviewViewProvider {
+  private webview?: vscode.Webview;
+
   constructor(private readonly ctx: vscode.ExtensionContext) {}
 
   resolveWebviewView(webviewView: vscode.WebviewView) {
     const { webview } = webviewView;
+    this.webview = webview;
 
     webview.options = {
       enableScripts: true,
@@ -60,6 +113,9 @@ class NavifySearchViewProvider implements vscode.WebviewViewProvider {
     };
 
     webview.html = this.getHtml(webview);
+
+    // Send initial recent files
+    this.sendRecentFiles();
 
     webview.onDidReceiveMessage(async (msg) => {
       if (msg?.type === "SEARCH") {
@@ -95,6 +151,20 @@ class NavifySearchViewProvider implements vscode.WebviewViewProvider {
         }
       }
     });
+  }
+
+  sendRecentFiles(): void {
+    if (!this.webview) {
+      return;
+    }
+
+    const items = recentFiles.map((u) => ({
+      label: path.basename(u.fsPath),
+      path: vscode.workspace.asRelativePath(u),
+      uri: u.toString()
+    }));
+
+    this.webview.postMessage({ type: "RECENT_FILES", items });
   }
 
   private getHtml(webview: vscode.Webview): string {

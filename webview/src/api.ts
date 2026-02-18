@@ -5,7 +5,8 @@ export type ToExtension =
   | { type: "OPEN"; uri: string };
 
 export type FromExtension =
-  | { type: "RESULTS"; items: ResultItem[] };
+  | { type: "RESULTS"; items: ResultItem[] }
+  | { type: "RECENT_FILES"; items: ResultItem[] };
 
 const vscode = acquireVsCodeApi();
 
