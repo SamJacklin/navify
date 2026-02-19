@@ -223,7 +223,10 @@ function DirNodeView({
       <div
         class={`explorer-dir-pick-item${isSelected ? " selected" : ""}`}
         style={{ paddingLeft: `${16 + indent}px` }}
-        onClick={() => onSelect(node.uri)}
+        onClick={() => {
+          onSelect(node.uri);
+          if (!isExpanded) onToggleExpand(node.uri);
+      }}
         role="checkbox"
         aria-checked={isSelected}
         tabIndex={0}
