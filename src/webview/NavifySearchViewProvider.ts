@@ -25,8 +25,9 @@ export class NavifySearchViewProvider implements vscode.WebviewViewProvider {
 
     webview.html = await getHtml(webview, this.ctx.extensionUri);
 
-    // Push current recent files as soon as the view is ready.
+    // Push current state as soon as the view is ready.
     this.sendRecentFiles();
+    this.sendActiveFile();
 
     webview.onDidReceiveMessage(async (raw: unknown) => {
       const msg = raw as {
@@ -102,6 +103,14 @@ export class NavifySearchViewProvider implements vscode.WebviewViewProvider {
       items: this.recentFiles.toPayload(),
     };
     this.webview.postMessage(message);
+  }
+
+  sendActiveFile(): void {
+    if (!this.webview) {
+      return;
+    }
+    const uri = vscode.window.activeTextEditor?.document.uri?.toString() ?? null;
+    this.webview.postMessage({ type: "ACTIVE_FILE", uri } as OutboundMessage);
   }
 }
 

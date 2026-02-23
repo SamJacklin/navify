@@ -474,6 +474,7 @@ body {
   font-size: 13px;
   user-select: none;
   transition: background 0.1s ease;
+  position: relative; /* anchor for ::after flash overlay */
 }
 
 .explorer-item:hover {
@@ -483,6 +484,31 @@ body {
 .explorer-item:focus-visible {
   outline: 1px solid var(--list-focus-outline);
   outline-offset: -1px;
+}
+
+/* Currently active file (matches VS Code's inactive selection) */
+.explorer-item--active {
+  background: var(--vscode-list-inactiveSelectionBackground);
+}
+
+.explorer-item--active:hover {
+  background: var(--list-hover-bg);
+}
+
+/* Brief flash overlay when a file is opened via the tree */
+@keyframes explorer-item-flash {
+  0%   { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+.explorer-item--flash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--vscode-list-activeSelectionBackground);
+  animation: explorer-item-flash 0.8s ease-out forwards;
+  pointer-events: none;
 }
 
 .explorer-dir-item {

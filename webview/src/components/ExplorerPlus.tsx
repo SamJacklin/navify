@@ -13,6 +13,8 @@ export function ExplorerPlus({ visible }: ExplorerPlusProps) {
   const [treeRoots, setTreeRoots] = useState<TreeNode[] | null>(null);
   const [treeExpanded, setTreeExpanded] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const [activeUri, setActiveUri] = useState<string | null>(null);
+  const [justOpenedUri, setJustOpenedUri] = useState<string | null>(null);
 
   // Request the directory tree the first time this tab becomes visible.
   useEffect(() => {
@@ -21,6 +23,13 @@ export function ExplorerPlus({ visible }: ExplorerPlusProps) {
       post({ type: "EXPLORER_GET_DIR_TREE" });
     }
   }, [visible]);
+
+  // Clear the flash class once the animation has played out.
+  useEffect(() => {
+    if (!justOpenedUri) return;
+    const id = setTimeout(() => setJustOpenedUri(null), 1200);
+    return () => clearTimeout(id);
+  }, [justOpenedUri]);
 
   // Listen for messages from the extension host.
   useEffect(() => {
@@ -32,9 +41,16 @@ export function ExplorerPlus({ visible }: ExplorerPlusProps) {
         setTreeRoots(msg.roots);
         setTreeExpanded(new Set());
         setLoading(false);
+      } else if (msg.type === "ACTIVE_FILE") {
+        setActiveUri(msg.uri);
       }
     });
   }, []);
+
+  const openFile = (uri: string) => {
+    post({ type: "OPEN", uri });
+    setJustOpenedUri(uri);
+  };
 
   const toggleSelection = (uri: string) => {
     setSelectedUris((prev) => {
@@ -90,8 +106,10 @@ export function ExplorerPlus({ visible }: ExplorerPlusProps) {
         <TreeView
           roots={treeRoots}
           expanded={treeExpanded}
+          activeUri={activeUri}
+          justOpenedUri={justOpenedUri}
           onToggle={toggleTreeExpand}
-          onOpen={(uri) => post({ type: "OPEN", uri })}
+          onOpen={openFile}
           onChangeFolders={changeFolders}
         />
       ) : (
@@ -281,6 +299,8 @@ function DirNodeView({
 interface TreeViewProps {
   roots: TreeNode[];
   expanded: Set<string>;
+  activeUri: string | null;
+  justOpenedUri: string | null;
   onToggle: (uri: string) => void;
   onOpen: (uri: string) => void;
   onChangeFolders: () => void;
@@ -289,6 +309,8 @@ interface TreeViewProps {
 function TreeView({
   roots,
   expanded,
+  activeUri,
+  justOpenedUri,
   onToggle,
   onOpen,
   onChangeFolders,
@@ -341,6 +363,8 @@ function TreeView({
                   node={child}
                   depth={0}
                   expanded={expanded}
+                  activeUri={activeUri}
+                  justOpenedUri={justOpenedUri}
                   onToggle={onToggle}
                   onOpen={onOpen}
                 />
@@ -359,6 +383,8 @@ interface TreeNodeViewProps {
   node: TreeNode;
   depth: number;
   expanded: Set<string>;
+  activeUri: string | null;
+  justOpenedUri: string | null;
   onToggle: (uri: string) => void;
   onOpen: (uri: string) => void;
 }
@@ -367,15 +393,28 @@ function TreeNodeView({
   node,
   depth,
   expanded,
+  activeUri,
+  justOpenedUri,
   onToggle,
   onOpen,
 }: TreeNodeViewProps) {
   const indent = depth * 14;
 
   if (node.type === "file") {
+    const isActive = activeUri === node.uri;
+    const isJustOpened = justOpenedUri === node.uri;
+
+    const itemClass = [
+      "explorer-item",
+      isActive ? "explorer-item--active" : "",
+      isJustOpened ? "explorer-item--flash" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return (
       <div
-        class="explorer-item"
+        class={itemClass}
         style={{ paddingLeft: `${16 + indent}px` }}
         onClick={() => onOpen(node.uri)}
         role="button"
@@ -430,6 +469,8 @@ function TreeNodeView({
             node={child}
             depth={depth + 1}
             expanded={expanded}
+            activeUri={activeUri}
+            justOpenedUri={justOpenedUri}
             onToggle={onToggle}
             onOpen={onOpen}
           />

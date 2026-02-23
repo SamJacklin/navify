@@ -23,6 +23,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         recentFiles.add(editor.document.uri);
         provider.sendRecentFiles();
       }
+      // Always notify — null when no editor is active.
+      provider.sendActiveFile();
     })
   );
 
