@@ -30,7 +30,8 @@ export type FromExtension =
   | { type: "RESULTS"; items: ResultItem[] }
   | { type: "RECENT_FILES"; items: ResultItem[] }
   | { type: "EXPLORER_DIR_TREE"; roots: DirNode[] }
-  | { type: "EXPLORER_TREE"; roots: TreeNode[] };
+  | { type: "EXPLORER_TREE"; roots: TreeNode[] }
+  | { type: "ACTIVE_FILE"; uri: string | null };
 
 const vscode = acquireVsCodeApi();
 

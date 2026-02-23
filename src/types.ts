@@ -44,4 +44,5 @@ export type OutboundMessage =
   | { type: "RESULTS"; items: FileItemPayload[] }
   | { type: "RECENT_FILES"; items: FileItemPayload[] }
   | { type: "EXPLORER_DIR_TREE"; roots: DirNode[] }
-  | { type: "EXPLORER_TREE"; roots: TreeNode[] };
+  | { type: "EXPLORER_TREE"; roots: TreeNode[] }
+  | { type: "ACTIVE_FILE"; uri: string | null };
