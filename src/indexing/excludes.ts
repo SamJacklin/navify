@@ -23,10 +23,10 @@ export function buildExcludePattern(): string {
       globalCfg.get<Record<string, boolean>>("search.exclude") ?? {};
 
     for (const [glob, enabled] of Object.entries(filesExclude)) {
-      if (enabled) globs.add(glob);
+      if (enabled) {globs.add(glob);}
     }
     for (const [glob, enabled] of Object.entries(searchExclude)) {
-      if (enabled) globs.add(glob);
+      if (enabled) {globs.add(glob);}
     }
   }
 
