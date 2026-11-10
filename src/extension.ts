@@ -22,7 +22,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     })
   );
 
-  // Track recently opened files via both editor focus and document open events.
+  // Track recently opened files from editor focus only. `onDidOpenTextDocument`
+  // also fires when extensions load documents in the background (hovers, peek,
+  // language servers), which filled the list with files the user never opened.
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor?.document.uri) {
@@ -38,12 +40,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     })
   );
 
+  // Keep recent files pointing at files that exist. The watcher catches
+  // deletions from anywhere (including git); renames made inside VS Code are
+  // followed rather than dropped.
+  const deleteWatcher = vscode.workspace.createFileSystemWatcher("**/*", true, true, false);
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument((doc) => {
-      if (doc.uri) {
-        recentFiles.add(doc.uri);
-        views.forEach((view) => view.sendRecentFiles());
-      }
+    deleteWatcher,
+    deleteWatcher.onDidDelete((uri) => {
+      recentFiles.remove(uri);
+      views.forEach((view) => view.sendRecentFiles());
+    }),
+    vscode.workspace.onDidRenameFiles((e) => {
+      e.files.forEach(({ oldUri, newUri }) => recentFiles.rename(oldUri, newUri));
+      views.forEach((view) => view.sendRecentFiles());
     })
   );
 
