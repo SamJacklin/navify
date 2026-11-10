@@ -13,22 +13,31 @@ export async function showFuzzyFilePicker(): Promise<void> {
 
   const qp = vscode.window.createQuickPick<FileItem>();
   qp.matchOnDescription = true;
-  qp.matchOnDetail = true;
+  // Details hold file previews, which only exist for items that have been
+  // highlighted; matching on them made results depend on browsing history.
+  qp.matchOnDetail = false;
   qp.placeholder = "Type to fuzzy-search files… (↑/↓ to preview, Enter to open)";
   qp.items = items;
 
   const disposables: vscode.Disposable[] = [];
 
   disposables.push(
-    qp.onDidChangeActive(async (active) => {
-      if (!active || active.length === 0) {
+    qp.onDidChangeActive(async ([item]) => {
+      // Skip items that already show a preview. This also stops the
+      // activeItems assignment below from re-entering this handler forever.
+      if (!item || item.detail) {
         return;
       }
-      const item = active[0];
       await ensurePreviewForItem(item);
-      qp.items = qp.items.map((i) =>
-        i.uri.toString() === item.uri.toString() ? item : i
-      );
+      if (qp.activeItems[0] !== item) {
+        return; // user has moved on; the preview shows next time it renders
+      }
+      // QuickPick only re-renders a mutated item when `items` is reassigned,
+      // and reassigning resets the active item to the top of the list. Keep
+      // the scroll position and restore the active item so ↑/↓ isn't undone.
+      qp.keepScrollPosition = true;
+      qp.items = [...qp.items];
+      qp.activeItems = [item];
     })
   );
 
@@ -82,6 +91,12 @@ async function ensurePreviewForItem(item: FileItem): Promise<void> {
   }
   try {
     const buf = await readHead(item.uri, 4096);
+    if (buf.includes(0)) {
+      // A NUL byte means binary content; decoding it would show garbage.
+      item.detail = "— (binary file)";
+      previewCache.set(key, item.detail);
+      return;
+    }
     const text = buf.toString("utf8");
     const lines = text.split(/\r?\n/);
 
