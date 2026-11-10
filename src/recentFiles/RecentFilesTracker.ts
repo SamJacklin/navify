@@ -33,6 +33,21 @@ export class RecentFilesTracker {
     }
   }
 
+  /** Drop a deleted file, or every file under a deleted folder. */
+  remove(uri: vscode.Uri): void {
+    this.files = this.files.filter((u) => !isSameOrInside(u, uri));
+  }
+
+  /** Follow a rename or move of a file, or of a folder containing files. */
+  rename(oldUri: vscode.Uri, newUri: vscode.Uri): void {
+    const oldPath = oldUri.toString();
+    this.files = this.files.map((u) =>
+      isSameOrInside(u, oldUri)
+        ? vscode.Uri.parse(newUri.toString() + u.toString().slice(oldPath.length))
+        : u
+    );
+  }
+
   /** Serialise to the JSON-safe shape expected by the webview. */
   toPayload(): FileItemPayload[] {
     return this.files.map((u) => ({
@@ -41,4 +56,10 @@ export class RecentFilesTracker {
       uri: u.toString(),
     }));
   }
+}
+
+function isSameOrInside(uri: vscode.Uri, target: vscode.Uri): boolean {
+  const u = uri.toString();
+  const t = target.toString();
+  return u === t || u.startsWith(t.endsWith("/") ? t : t + "/");
 }
