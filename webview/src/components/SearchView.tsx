@@ -43,6 +43,10 @@ export function SearchView() {
     });
   }, [hasQuery]);
 
+  // Ask for initial state only now that the listener above is attached;
+  // effects run in declaration order, so the reply can't arrive unheard.
+  useEffect(() => post({ type: "READY" }), []);
+
   // Debounced search.
   useEffect(() => {
     const query = q.trim();

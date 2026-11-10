@@ -20,3 +20,6 @@ Thumbs.db
 # Coverage / tooling (if added later)
 coverage/
 .tmp/
+
+# Local UI screenshots (regenerated, not committed)
+.screenshots/
