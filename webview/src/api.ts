@@ -29,7 +29,7 @@ export type ToExtension =
   | { type: "EXPLORER_MODE"; mode: "pick" | "tree" };
 
 export type FromExtension =
-  | { type: "RESULTS"; items: ResultItem[] }
+  | { type: "RESULTS"; q: string; items: ResultItem[] }
   | { type: "RECENT_FILES"; items: ResultItem[] }
   | { type: "EXPLORER_DIR_TREE"; roots: DirNode[] }
   | { type: "EXPLORER_TREE"; roots: TreeNode[] }

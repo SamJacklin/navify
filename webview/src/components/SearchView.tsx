@@ -11,6 +11,8 @@ export function SearchView() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // The query of the newest SEARCH sent; replies for any other query are stale.
+  const latestQueryRef = useRef("");
 
   const hasQuery = q.trim().length > 0;
   const displayItems = hasQuery ? searchResults : recentFiles;
@@ -28,6 +30,9 @@ export function SearchView() {
   useEffect(() => {
     return onMessage((msg) => {
       if (msg.type === "RESULTS") {
+        if (msg.q !== latestQueryRef.current) {
+          return;
+        }
         setSearchResults(Array.isArray(msg.items) ? msg.items : []);
         setSelectedIndex(0);
         setIsSearching(false);
@@ -47,6 +52,7 @@ export function SearchView() {
   // Debounced search.
   useEffect(() => {
     const query = q.trim();
+    latestQueryRef.current = query;
     if (!query) {
       setSearchResults([]);
       setSelectedIndex(0);
