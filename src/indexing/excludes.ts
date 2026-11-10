@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { combineExcludeGlobs, ExcludeSetting } from "./globs";
 
 /**
  * Builds the glob exclude pattern for `workspace.findFiles`.
@@ -13,22 +14,16 @@ import * as vscode from "vscode";
 export function buildExcludePattern(): string {
   const cfg = vscode.workspace.getConfiguration("navify");
   // VS Code merges package.json defaults into the returned value automatically.
-  const globs = new Set<string>(cfg.get<string[]>("excludeGlobs", []));
+  const navifyGlobs = cfg.get<string[]>("excludeGlobs", []);
 
+  const workspaceExcludes: ExcludeSetting[] = [];
   if (cfg.get<boolean>("respectWorkspaceExcludes", true)) {
     const globalCfg = vscode.workspace.getConfiguration();
-    const filesExclude =
-      globalCfg.get<Record<string, boolean>>("files.exclude") ?? {};
-    const searchExclude =
-      globalCfg.get<Record<string, boolean>>("search.exclude") ?? {};
-
-    for (const [glob, enabled] of Object.entries(filesExclude)) {
-      if (enabled) {globs.add(glob);}
-    }
-    for (const [glob, enabled] of Object.entries(searchExclude)) {
-      if (enabled) {globs.add(glob);}
-    }
+    workspaceExcludes.push(
+      globalCfg.get<ExcludeSetting>("files.exclude") ?? {},
+      globalCfg.get<ExcludeSetting>("search.exclude") ?? {}
+    );
   }
 
-  return globs.size ? `{${Array.from(globs).join(",")}}` : "";
+  return combineExcludeGlobs(navifyGlobs, workspaceExcludes);
 }

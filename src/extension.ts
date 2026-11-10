@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
-import { buildFileIndex, getFileIndex } from "./indexing/fileIndex";
+import { buildFileIndex, getFileIndex, watchFileIndex } from "./indexing/fileIndex";
 import { RecentFilesTracker } from "./recentFiles/RecentFilesTracker";
 import { NavifyViewProvider } from "./webview/NavifyViewProvider";
 import { showFuzzyFilePicker } from "./quickpick/showFuzzyFilePicker";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   buildFileIndex().catch((err) => console.error("[Navify] index error:", err));
+  context.subscriptions.push(watchFileIndex());
 
   const recentFiles = new RecentFilesTracker();
   const searchView = new NavifyViewProvider(context, recentFiles, "search");
