@@ -17,6 +17,8 @@ interface RowProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "label" | "i
   icon?: string;
   /** Keyboard or pointer selection. */
   selected?: boolean;
+  /** A picked item in a multi-select list. */
+  checked?: boolean;
   /** The file currently open in the editor. */
   active?: boolean;
   /** Brief highlight after opening. */
@@ -34,6 +36,7 @@ export function Row({
   twistie,
   icon,
   selected,
+  checked,
   active,
   flash,
   class: extraClass,
@@ -43,6 +46,7 @@ export function Row({
   const classes = [
     "row",
     selected && "row--selected",
+    checked && "row--checked",
     active && "row--active",
     flash && "row--flash",
     extraClass,

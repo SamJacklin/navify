@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - **UI revamp** — Search and Explorer Plus are now separate native views in the Navify sidebar instead of tabs inside one webview, so VS Code provides the section headers, collapsing and reordering
 - Removed the in-panel logo header, tab bar and emoji icons; icons now use VS Code codicons
-- Rows are a compact 22px with right-aligned muted metadata (search results show their folder beside the file name) and a soft, theme-derived selection tint; every colour comes from the active theme
+- Crisp, native-style rows: 22px, square and edge to edge, with right-aligned muted metadata (search results show their folder beside the file name), the theme's own selection colours plus a 1px focus outline, and indent guides in trees; every colour comes from the active theme
 - Explorer Plus "Change folders" is also available as a title-bar action once folders are focused
 - `NavifySearchViewProvider` renamed to `NavifyViewProvider` and shared by both views
 - Migrated webview frontend from vanilla JS to **Preact** with **esbuild** bundling for improved performance and component-based architecture

@@ -1,26 +1,28 @@
 /*
  * Navify webview styles.
  *
- * Every colour comes from the active VS Code theme, so the views look right in
- * light, dark and high-contrast themes. The one accent (`--accent`) is the
- * theme's focus colour and is used sparingly: selection tint and check marks.
+ * Aim: crisp and native. Rows run edge to edge with square corners, selection
+ * uses the theme's own list colours plus a 1px focus outline, structure comes
+ * from indent guides rather than spacing, and every colour comes from the
+ * active VS Code theme so light, dark and high-contrast themes all work.
  */
 :root {
   --fg: var(--vscode-foreground);
   --fg-muted: var(--vscode-descriptionForeground);
   --bg: var(--vscode-sideBar-background);
-  --accent: var(--vscode-focusBorder);
-  --tint: color-mix(in srgb, var(--accent) 22%, transparent);
+  --focus: var(--vscode-focusBorder);
   --hover-bg: var(--vscode-list-hoverBackground);
-  --active-bg: var(--vscode-list-inactiveSelectionBackground);
-  --hc-border: var(--vscode-contrastActiveBorder, transparent);
+  --selected-bg: var(--vscode-list-activeSelectionBackground);
+  --selected-fg: var(--vscode-list-activeSelectionForeground, var(--fg));
+  --muted-bg: var(--vscode-list-inactiveSelectionBackground);
+  --guide: var(--vscode-tree-indentGuidesStroke, transparent);
 
-  --gutter: 8px;      /* outer inset for the search field, rows and footer */
-  --row-pad: 8px;     /* inset of row content from the row's rounded edge */
+  --gutter: 8px;      /* inset of the search field and footer from the view edge */
+  --row-pad: 15px;    /* row text lines up with the search field's text */
   --row-height: 22px;
   --indent: 10px;     /* per nesting level */
   --twistie: 16px;
-  --radius: 4px;
+  --radius: 2px;      /* inputs and buttons only; rows are square */
 }
 
 * {
@@ -58,7 +60,7 @@ button {
 .list {
   flex: 1;
   overflow-y: auto;
-  padding: 0 var(--gutter) var(--gutter);
+  padding-bottom: var(--gutter);
 }
 
 .list:focus {
@@ -74,15 +76,15 @@ button {
 
 .search-bar {
   flex-shrink: 0;
-  padding: var(--gutter) var(--gutter) 4px;
+  padding: 6px var(--gutter) 6px;
 }
 
 .search-field {
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 26px;
-  padding: 0 3px 0 var(--row-pad);
+  height: 24px;
+  padding: 0 2px 0 6px;
   border: 1px solid var(--vscode-input-border, transparent);
   border-radius: var(--radius);
   background: var(--vscode-input-background);
@@ -90,7 +92,7 @@ button {
 }
 
 .search-field:focus-within {
-  border-color: var(--accent);
+  border-color: var(--focus);
 }
 
 .search-input {
@@ -113,18 +115,16 @@ button {
 .section-label {
   flex-shrink: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px calc(var(--gutter) + var(--row-pad)) 4px;
+  height: 22px;
+  padding: 0 var(--row-pad);
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--fg-muted);
-  /* Within .list the list's own padding already provides the gutter. */
-}
-
-.list .section-label {
-  padding-left: var(--row-pad);
-  padding-right: var(--row-pad);
 }
 
 .section-label > span:first-child {
@@ -135,11 +135,15 @@ button {
 }
 
 .section-label--divided {
-  margin-top: 6px;
+  margin-top: 4px;
+  border-top: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-panel-border, transparent));
 }
 
 .section-label-meta {
   flex-shrink: 0;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 /* ── Rows ────────────────────────────────────────────────────────────────── */
@@ -151,13 +155,22 @@ button {
   gap: 4px;
   height: var(--row-height);
   padding: 0 var(--row-pad) 0 calc(var(--row-pad) + var(--depth, 0) * var(--indent));
-  border-radius: var(--radius);
   cursor: pointer;
   user-select: none;
+
+  /* Indent guides: one 1px line per ancestor, centred under its chevron. */
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--guide) 0 1px,
+    transparent 1px var(--indent)
+  );
+  background-repeat: no-repeat;
+  background-position: calc(var(--row-pad) + 3px) 0;
+  background-size: calc(var(--depth, 0) * var(--indent)) 100%;
 }
 
 .row:hover {
-  background: var(--hover-bg);
+  background-color: var(--hover-bg);
 }
 
 .row:focus {
@@ -165,21 +178,29 @@ button {
 }
 
 .row:focus-visible {
-  outline: 1px solid var(--accent);
+  outline: 1px solid var(--focus);
   outline-offset: -1px;
 }
 
-/* The file currently open in the editor. */
+/* A picked folder, or the file currently open in the editor. */
+.row--checked,
 .row--active {
-  background: var(--active-bg);
+  background-color: var(--muted-bg);
 }
 
-/* Keyboard / pointer selection, or a picked folder. Wins over hover and active. */
+/* Keyboard / pointer selection. Wins over hover, checked and active. */
 .row--selected,
 .row--selected:hover {
-  background: var(--tint);
-  outline: 1px dashed var(--hc-border);
+  background-color: var(--selected-bg);
+  color: var(--selected-fg);
+  outline: 1px solid var(--focus);
   outline-offset: -1px;
+}
+
+.row--selected .row-meta,
+.row--selected .row-twistie {
+  color: inherit;
+  opacity: 0.8;
 }
 
 .row-twistie {
@@ -187,7 +208,7 @@ button {
   width: var(--twistie);
   font-size: 16px;
   color: var(--fg-muted);
-  margin-left: -4px; /* chevron glyphs carry their own side bearing */
+  margin-left: -5px; /* chevron glyphs carry their own side bearing */
 }
 
 .row-icon {
@@ -216,20 +237,20 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.92em;
+  font-size: 12px;
   color: var(--fg-muted);
 }
 
 .row-check {
   font-size: 14px;
-  color: var(--accent);
+  color: var(--focus);
   vertical-align: middle;
 }
 
-/* Brief highlight when a file is opened from the tree. */
+/* A short, sharp confirmation when a file is opened from the tree. */
 @keyframes row-flash {
   0% {
-    opacity: 0.6;
+    opacity: 0.35;
   }
   100% {
     opacity: 0;
@@ -240,9 +261,8 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  background: var(--accent);
-  animation: row-flash 0.8s ease-out forwards;
+  background: var(--focus);
+  animation: row-flash 0.3s ease-out forwards;
   pointer-events: none;
 }
 
@@ -257,7 +277,7 @@ button {
   height: 20px;
   padding: 0;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--fg-muted);
   cursor: pointer;
@@ -271,7 +291,7 @@ button {
 .icon-button:focus-visible,
 .link-button:focus-visible,
 .primary-button:focus-visible {
-  outline: 1px solid var(--accent);
+  outline: 1px solid var(--focus);
   outline-offset: 1px;
 }
 
@@ -308,24 +328,22 @@ button {
 .empty {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 24px 16px;
-  text-align: center;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px var(--row-pad);
 }
 
 .empty-title {
-  color: var(--fg-muted);
+  color: var(--fg);
 }
 
 .empty-hint {
   font-size: 12px;
   color: var(--fg-muted);
-  opacity: 0.8;
 }
 
 .empty .link-button {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 /* ── Scrollbars ──────────────────────────────────────────────────────────── */

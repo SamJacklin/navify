@@ -6,7 +6,6 @@ interface FileListProps {
   items: ResultItem[];
   selectedIndex: number;
   onSelectedIndexChange: (index: number) => void;
-  activeUri?: string | null;
   emptyState?: {
     title: string;
     hint?: string;
@@ -23,7 +22,6 @@ export function FileList({
   items,
   selectedIndex,
   onSelectedIndexChange,
-  activeUri,
   emptyState,
 }: FileListProps) {
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -53,7 +51,6 @@ export function FileList({
           meta={parentDir(item.path)}
           title={item.path}
           selected={index === selectedIndex}
-          active={item.uri === activeUri}
           role="option"
           aria-selected={index === selectedIndex}
           onClick={() => post({ type: "OPEN", uri: item.uri })}
