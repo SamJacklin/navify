@@ -8,7 +8,7 @@ A focused file navigation panel for VS Code. Navify sits in the Activity Bar alo
 
 ### Explorer Plus
 
-Focus on one or two folders at a time without restructuring your workspace. Navigate a folder picker to choose your scope, then browse only those files in a compact tree. When you open a file, it is highlighted in the tree. If a file is already open in the editor when you switch to the tab, that is highlighted too.
+Focus on one or two folders at a time without restructuring your workspace. Navigate a folder picker to choose your scope, then browse only those files in a compact tree. When you open a file, it is highlighted in the tree. If a file is already open in the editor when you open the view, that is highlighted too.
 
 - Select up to two folders as your active working scope
 - Tree view is independent of the native Explorer — collapse and expand as needed

@@ -1,31 +1,34 @@
-/* VS Code theme variables */
+/*
+ * Navify webview styles.
+ *
+ * Every colour comes from the active VS Code theme, so the views look right in
+ * light, dark and high-contrast themes. The one accent (`--accent`) is the
+ * theme's focus colour and is used sparingly: selection tint and check marks.
+ */
 :root {
   --fg: var(--vscode-foreground);
   --fg-muted: var(--vscode-descriptionForeground);
   --bg: var(--vscode-sideBar-background);
-  --border: var(--vscode-panel-border, var(--vscode-dropdown-border));
-  --input-bg: var(--vscode-input-background);
-  --input-fg: var(--vscode-input-foreground);
-  --input-border: var(--vscode-input-border);
-  --input-focus-border: var(--vscode-focusBorder);
-  --list-hover-bg: var(--vscode-list-hoverBackground);
-  --list-active-bg: var(--vscode-list-activeSelectionBackground);
-  --list-active-fg: var(--vscode-list-activeSelectionForeground);
-  --list-focus-outline: var(--vscode-focusBorder);
-  --button-bg: var(--vscode-button-background);
-  --button-fg: var(--vscode-button-foreground);
-  --button-hover-bg: var(--vscode-button-hoverBackground);
-  --tab-active-border: var(--vscode-panelTitle-activeBorder, var(--vscode-focusBorder));
-  --tab-active-fg: var(--vscode-panelTitle-activeForeground, var(--vscode-foreground));
-  --tab-inactive-fg: var(--vscode-panelTitle-inactiveForeground, var(--vscode-descriptionForeground));
+  --accent: var(--vscode-focusBorder);
+  --tint: color-mix(in srgb, var(--accent) 22%, transparent);
+  --hover-bg: var(--vscode-list-hoverBackground);
+  --active-bg: var(--vscode-list-inactiveSelectionBackground);
+  --hc-border: var(--vscode-contrastActiveBorder, transparent);
+
+  --gutter: 8px;      /* outer inset for the search field, rows and footer */
+  --row-pad: 8px;     /* inset of row content from the row's rounded edge */
+  --row-height: 22px;
+  --indent: 10px;     /* per nesting level */
+  --twistie: 16px;
+  --radius: 4px;
 }
 
-/* Reset */
 * {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -39,526 +42,310 @@ body {
   overflow: hidden;
 }
 
-/* Root container */
-.root {
+button {
+  font: inherit;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+
+.view {
   height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* Header */
-.header {
-  flex-shrink: 0;
-  padding: 12px 16px 10px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo {
-  width: 20px;
-  height: 20px;
-  opacity: 0.9;
-}
-
-.title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  color: var(--fg);
-  opacity: 0.95;
-}
-
-/* Tabs */
-.tabs {
-  flex-shrink: 0;
-  display: flex;
-  gap: 4px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-}
-
-.tab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--tab-inactive-fg);
-  font-family: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  position: relative;
-}
-
-.tab:hover {
-  color: var(--tab-active-fg);
-}
-
-.tab.active {
-  color: var(--tab-active-fg);
-  border-bottom-color: var(--tab-active-border);
-}
-
-.tab:focus-visible {
-  outline: 1px solid var(--list-focus-outline);
-  outline-offset: -1px;
-}
-
-.tab-icon {
-  font-size: 14px;
-  line-height: 1;
-}
-
-/* Tab content */
-.tab-content {
+.list {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  padding: 0 var(--gutter) var(--gutter);
 }
 
-/* Search container */
-.search-container {
+.list:focus {
+  outline: none;
+}
+
+.footer {
   flex-shrink: 0;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  padding: var(--gutter);
 }
 
-.search-input-wrapper {
-  position: relative;
+/* ── Search field ────────────────────────────────────────────────────────── */
+
+.search-bar {
+  flex-shrink: 0;
+  padding: var(--gutter) var(--gutter) 4px;
+}
+
+.search-field {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  border: 1px solid var(--input-border);
-  border-radius: 3px;
-  background: var(--input-bg);
-  transition: border-color 0.15s ease;
+  gap: 4px;
+  height: 26px;
+  padding: 0 3px 0 var(--row-pad);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: var(--radius);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
 }
 
-.search-input-wrapper:focus-within {
-  border-color: var(--input-focus-border);
-}
-
-.search-icon {
-  font-size: 14px;
-  line-height: 1;
-  opacity: 0.7;
+.search-field:focus-within {
+  border-color: var(--accent);
 }
 
 .search-input {
   flex: 1;
+  min-width: 0;
+  padding: 0;
   border: none;
   outline: none;
   background: transparent;
-  color: var(--input-fg);
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 1.4;
+  color: inherit;
+  font: inherit;
 }
 
 .search-input::placeholder {
-  color: var(--fg-muted);
-  opacity: 0.7;
+  color: var(--vscode-input-placeholderForeground);
 }
 
-.search-clear {
-  padding: 2px 4px;
-  border: none;
-  background: transparent;
+/* ── Section labels ──────────────────────────────────────────────────────── */
+
+.section-label {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px calc(var(--gutter) + var(--row-pad)) 4px;
+  font-size: 11px;
   color: var(--fg-muted);
-  font-size: 14px;
-  line-height: 1;
+  /* Within .list the list's own padding already provides the gutter. */
+}
+
+.list .section-label {
+  padding-left: var(--row-pad);
+  padding-right: var(--row-pad);
+}
+
+.section-label > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.section-label--divided {
+  margin-top: 6px;
+}
+
+.section-label-meta {
+  flex-shrink: 0;
+}
+
+/* ── Rows ────────────────────────────────────────────────────────────────── */
+
+.row {
+  position: relative; /* anchor for the flash overlay */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--row-height);
+  padding: 0 var(--row-pad) 0 calc(var(--row-pad) + var(--depth, 0) * var(--indent));
+  border-radius: var(--radius);
   cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.15s ease;
+  user-select: none;
 }
 
-.search-clear:hover {
-  opacity: 1;
+.row:hover {
+  background: var(--hover-bg);
 }
 
-.search-clear:focus-visible {
-  outline: 1px solid var(--list-focus-outline);
-  outline-offset: 1px;
-}
-
-.search-hint {
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--fg-muted);
-  opacity: 0.8;
-}
-
-/* Section header */
-.section-header {
-  padding: 12px 16px 8px;
-  border-bottom: 1px solid var(--border);
-}
-
-.section-title {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--fg-muted);
-  opacity: 0.9;
-}
-
-/* Results list */
-.results {
-  flex: 1;
-  overflow-y: auto;
-  padding: 4px 8px;
-}
-
-.results:focus {
+.row:focus {
   outline: none;
 }
 
-.result-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px 10px;
-  margin: 2px 0;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.1s ease;
-}
-
-.result-item:hover {
-  background: var(--list-hover-bg);
-}
-
-.result-item.selected {
-  background: var(--list-active-bg);
-  color: var(--list-active-fg);
-}
-
-.result-item.selected .result-path {
-  color: var(--list-active-fg);
-  opacity: 0.8;
-}
-
-.result-item:focus {
-  outline: 1px solid var(--list-focus-outline);
+.row:focus-visible {
+  outline: 1px solid var(--accent);
   outline-offset: -1px;
 }
 
-.result-label {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* The file currently open in the editor. */
+.row--active {
+  background: var(--active-bg);
 }
 
-.result-path {
-  font-size: 11px;
+/* Keyboard / pointer selection, or a picked folder. Wins over hover and active. */
+.row--selected,
+.row--selected:hover {
+  background: var(--tint);
+  outline: 1px dashed var(--hc-border);
+  outline-offset: -1px;
+}
+
+.row-twistie {
+  flex-shrink: 0;
+  width: var(--twistie);
+  font-size: 16px;
   color: var(--fg-muted);
-  opacity: 0.85;
+  margin-left: -4px; /* chevron glyphs carry their own side bearing */
+}
+
+.row-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--fg-muted);
+}
+
+.row-label {
+  flex: 0 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Empty state */
+/*
+ * Muted metadata pinned right. A zero basis means it only ever takes the space
+ * the label leaves over, so the label is never truncated to make room for it.
+ */
+.row-meta {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-left: 12px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.92em;
+  color: var(--fg-muted);
+}
+
+.row-check {
+  font-size: 14px;
+  color: var(--accent);
+  vertical-align: middle;
+}
+
+/* Brief highlight when a file is opened from the tree. */
+@keyframes row-flash {
+  0% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.row--flash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--accent);
+  animation: row-flash 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.icon-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--fg);
+}
+
+.icon-button:focus-visible,
+.link-button:focus-visible,
+.primary-button:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--vscode-textLink-foreground);
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--vscode-textLink-activeForeground);
+  text-decoration: underline;
+}
+
+.primary-button {
+  width: 100%;
+  height: 26px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: var(--radius);
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+/* ── Empty states ────────────────────────────────────────────────────────── */
+
 .empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 48px 24px;
+  gap: 4px;
+  padding: 24px 16px;
   text-align: center;
 }
 
 .empty-title {
-  font-size: 13px;
-  color: var(--fg);
-  opacity: 0.8;
+  color: var(--fg-muted);
 }
 
 .empty-hint {
   font-size: 12px;
   color: var(--fg-muted);
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
-/* ── Explorer Plus ──────────────────────────────────────────────────────────── */
-
-/* Toolbar strip shared by the picker and tree views */
-.explorer-toolbar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  min-height: 36px;
+.empty .link-button {
+  margin-top: 8px;
 }
 
-.explorer-toolbar-label {
-  flex: 1;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--fg-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
 
-.explorer-selection-count {
-  font-size: 11px;
-  color: var(--fg-muted);
-  opacity: 0.7;
-  flex-shrink: 0;
-}
-
-/* "← Change" button in the tree toolbar */
-.explorer-back-btn {
-  flex-shrink: 0;
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: transparent;
-  color: var(--fg-muted);
-  font-family: inherit;
-  font-size: 11px;
-  cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
-}
-
-.explorer-back-btn:hover {
-  background: var(--list-hover-bg);
-  color: var(--fg);
-}
-
-.explorer-back-btn:focus-visible {
-  outline: 1px solid var(--list-focus-outline);
-  outline-offset: 1px;
-}
-
-/* Directory browser items (folder picker phase) */
-.explorer-dir-pick-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-right: 10px;
-  border-radius: 3px;
-  margin: 1px 4px;
-  cursor: pointer;
-  font-size: 13px;
-  user-select: none;
-  transition: background 0.1s ease;
-}
-
-.explorer-dir-pick-item:hover {
-  background: var(--list-hover-bg);
-}
-
-.explorer-dir-pick-item.selected {
-  background: var(--list-active-bg);
-  color: var(--list-active-fg);
-}
-
-.explorer-dir-pick-item:focus-visible {
-  outline: 1px solid var(--list-focus-outline);
-  outline-offset: -1px;
-}
-
-/* Arrow that toggles expand/collapse inside the picker row */
-.explorer-expand-arrow {
-  width: 12px;
-  flex-shrink: 0;
-  font-size: 10px;
-  text-align: center;
-  opacity: 0.6;
-  cursor: pointer;
-}
-
-.explorer-expand-arrow:hover {
-  opacity: 1;
-}
-
-/* Checkmark indicator for selected dirs in the picker */
-.explorer-check {
-  width: 14px;
-  flex-shrink: 0;
-  font-size: 11px;
-  text-align: center;
-}
-
-/* Section headers that separate two focused folders in the tree view */
-.explorer-section {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px 4px;
-}
-
-.explorer-section--divided {
-  margin-top: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.explorer-section-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--fg-muted);
-}
-
-/* Footer with the "Focus" apply button */
-.explorer-footer {
-  flex-shrink: 0;
-  padding: 10px 12px;
-  border-top: 1px solid var(--border);
-}
-
-.explorer-apply-btn {
-  width: 100%;
-  padding: 7px 12px;
-  border: none;
-  border-radius: 3px;
-  background: var(--button-bg);
-  color: var(--button-fg);
-  font-family: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-
-.explorer-apply-btn:hover {
-  background: var(--button-hover-bg);
-}
-
-.explorer-apply-btn:focus-visible {
-  outline: 1px solid var(--list-focus-outline);
-  outline-offset: 1px;
-}
-
-/* Tree items (files and directories) */
-.explorer-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-right: 10px;
-  border-radius: 3px;
-  margin: 1px 4px;
-  cursor: pointer;
-  font-size: 13px;
-  user-select: none;
-  transition: background 0.1s ease;
-  position: relative; /* anchor for ::after flash overlay */
-}
-
-.explorer-item:hover {
-  background: var(--list-hover-bg);
-}
-
-.explorer-item:focus-visible {
-  outline: 1px solid var(--list-focus-outline);
-  outline-offset: -1px;
-}
-
-/* Currently active file (matches VS Code's inactive selection) */
-.explorer-item--active {
-  background: var(--vscode-list-inactiveSelectionBackground);
-}
-
-.explorer-item--active:hover {
-  background: var(--list-hover-bg);
-}
-
-/* Brief flash overlay when a file is opened via the tree */
-@keyframes explorer-item-flash {
-  0%   { opacity: 0.6; }
-  100% { opacity: 0; }
-}
-
-.explorer-item--flash::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--vscode-list-activeSelectionBackground);
-  animation: explorer-item-flash 0.8s ease-out forwards;
-  pointer-events: none;
-}
-
-.explorer-dir-item {
-  font-weight: 500;
-}
-
-.explorer-arrow {
-  width: 12px;
-  flex-shrink: 0;
-  font-size: 10px;
-  text-align: center;
-  opacity: 0.6;
-}
-
-/* Spacer aligns file names with directory names (takes up arrow width) */
-.explorer-spacer {
-  width: 12px;
-  flex-shrink: 0;
-}
-
-.explorer-item-icon {
-  font-size: 13px;
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.explorer-item-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Scrollbar styling */
-.results::-webkit-scrollbar {
+.list::-webkit-scrollbar {
   width: 10px;
 }
 
-.results::-webkit-scrollbar-track {
+.list::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.results::-webkit-scrollbar-thumb {
+.list::-webkit-scrollbar-thumb {
   background: var(--vscode-scrollbarSlider-background);
-  border-radius: 10px;
 }
 
-.results::-webkit-scrollbar-thumb:hover {
+.list::-webkit-scrollbar-thumb:hover {
   background: var(--vscode-scrollbarSlider-hoverBackground);
 }
 
-.results::-webkit-scrollbar-thumb:active {
+.list::-webkit-scrollbar-thumb:active {
   background: var(--vscode-scrollbarSlider-activeBackground);
 }

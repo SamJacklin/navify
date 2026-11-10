@@ -6,7 +6,8 @@ declare global {
   };
 
   interface Window {
-    __NAVIFY_LOGO__?: string;
+    /** Which Navify view this webview renders; injected by `src/webview/html.ts`. */
+    __NAVIFY_VIEW__?: "search" | "explorer";
   }
 }
 
