@@ -242,7 +242,7 @@ function DirNodeView({
         label={node.name}
         depth={depth}
         twistie={!hasChildren ? "leaf" : isExpanded ? "open" : "closed"}
-        selected={isSelected}
+        checked={isSelected}
         meta={
           isSelected ? (
             <span class="codicon codicon-check row-check" aria-hidden="true" />

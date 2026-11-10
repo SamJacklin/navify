@@ -8,7 +8,6 @@ export function SearchView() {
   const [q, setQ] = useState("");
   const [searchResults, setSearchResults] = useState<ResultItem[]>([]);
   const [recentFiles, setRecentFiles] = useState<ResultItem[]>([]);
-  const [activeUri, setActiveUri] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,7 +24,7 @@ export function SearchView() {
     return () => window.removeEventListener("focus", focusInput);
   }, []);
 
-  // Receive results, recent files and the active editor from the extension host.
+  // Receive results and recent files from the extension host.
   useEffect(() => {
     return onMessage((msg) => {
       if (msg.type === "RESULTS") {
@@ -37,8 +36,6 @@ export function SearchView() {
         if (!hasQuery) {
           setSelectedIndex(0);
         }
-      } else if (msg.type === "ACTIVE_FILE") {
-        setActiveUri(msg.uri);
       }
     });
   }, [hasQuery]);
@@ -134,7 +131,6 @@ export function SearchView() {
         items={displayItems}
         selectedIndex={selectedIndex}
         onSelectedIndexChange={setSelectedIndex}
-        activeUri={activeUri}
         emptyState={emptyState}
       />
     </div>
