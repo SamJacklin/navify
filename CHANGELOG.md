@@ -33,6 +33,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - File indexing now correctly filters out cache files and junk paths to reduce noise in search results
+- File index now refreshes when files are created or deleted, workspace folders change, or exclude settings change (previously required a window reload)
+- Opening the quick pick during startup could permanently cap the index at 5,000 files
+- Search matched against absolute paths, so queries like your username or the project folder name matched every file
+- Searches typed before indexing finished returned nothing; stale results from superseded searches could overwrite newer ones
+- Conditional `files.exclude` entries (`{ "when": ... }`) were treated as enabled, e.g. hiding every `.js` file in TypeScript projects; brace globs are now flattened before being combined
+- Workspaces located inside a dot-directory (e.g. `~/.dotfiles/project`) had every file hidden
+- Quick pick jumped back to the first item when a preview loaded, and showed garbage previews for binary files
+- Recent files picked up documents opened in the background by other extensions, and kept deleted or renamed files
+- Tests were excluded from compilation, so `npm test` never ran any; added `npm run test:unit`
 
 ---
 
