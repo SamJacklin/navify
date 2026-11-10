@@ -6,12 +6,16 @@
  * them here would create a second source of truth. This function only applies
  * the one heuristic that is NOT expressible as a simple glob: the dotfile rule
  * controlled by `navify.hideHiddenFiles`.
+ *
+ * `relPath` must be relative to the workspace folder. Testing an absolute path
+ * would hide every file in a workspace that itself lives under a dot-directory
+ * (e.g. `~/.dotfiles/project`).
  */
-export function isJunkPath(fsPath: string, hideHidden: boolean): boolean {
+export function isJunkPath(relPath: string, hideHidden: boolean): boolean {
   if (!hideHidden) {
     return false;
   }
   // Treat any path segment starting with "." as a hidden file/directory.
-  const p = fsPath.replace(/\\/g, "/");
+  const p = relPath.replace(/\\/g, "/");
   return /(^|\/)\.[^/]+/.test(p);
 }

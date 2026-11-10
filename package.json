@@ -147,6 +147,7 @@
     "check:webview": "tsc -p webview/tsconfig.json",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
+    "test:unit": "npm run compile && mocha --ui tdd \"out/test/unit/**/*.test.js\"",
     "test": "vscode-test"
   },
   "files": [

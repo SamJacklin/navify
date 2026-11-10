@@ -8,9 +8,9 @@
     "lib": ["ES2022"],
     "sourceMap": true,
     "strict": true,
-    "types": ["node", "vscode"],
+    "types": ["node", "vscode", "mocha"],
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["webview/**", "media/**", "out/**", "**/*.test.ts"]
+  "exclude": ["webview/**", "media/**", "out/**"]
 }
