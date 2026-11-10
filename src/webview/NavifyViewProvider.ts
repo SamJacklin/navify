@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { DirNode, OutboundMessage, TreeNode, ViewKind } from "../types";
-import { getFileIndex } from "../indexing/fileIndex";
-import { isJunkPath } from "../indexing/isJunkPath";
+import { DirNode, FileItemPayload, OutboundMessage, TreeNode, ViewKind } from "../types";
+import { getFileIndex, whenIndexReady } from "../indexing/fileIndex";
 import { RecentFilesTracker } from "../recentFiles/RecentFilesTracker";
 import { getHtml } from "./html";
+
+const MAX_SEARCH_RESULTS = 300;
 
 /**
  * Backs one Navify sidebar view. Every view shares the same webview bundle and
@@ -62,28 +63,31 @@ export class NavifyViewProvider implements vscode.WebviewViewProvider {
       }
 
       if (msg?.type === "SEARCH") {
-        const cfg = vscode.workspace.getConfiguration("navify");
-        const hideHidden = cfg.get<boolean>("hideHiddenFiles", true);
-        const q = String(msg.q ?? "")
-          .toLowerCase()
-          .trim();
+        const query = String(msg.q ?? "");
+        const q = query.toLowerCase().trim();
 
-        const items = !q
-          ? []
-          : getFileIndex()
-              .filter((u) => {
-                const p = u.fsPath.toLowerCase();
-                return p.includes(q) || path.basename(p).includes(q);
-              })
-              .filter((u) => !isJunkPath(u.fsPath, hideHidden))
-              .slice(0, 300)
-              .map((u) => ({
-                label: path.basename(u.fsPath),
-                path: vscode.workspace.asRelativePath(u),
-                uri: u.toString(),
-              }));
+        // A search typed during startup would otherwise run against an empty
+        // index and never be retried.
+        await whenIndexReady();
 
-        webview.postMessage({ type: "RESULTS", items } as OutboundMessage);
+        const items: FileItemPayload[] = [];
+        if (q) {
+          for (const u of getFileIndex()) {
+            // Match the workspace-relative path, not the absolute one: the
+            // absolute path contains the user's home and the project's own
+            // folder name, so queries like "users" or "navify" matched every file.
+            const rel = vscode.workspace.asRelativePath(u);
+            if (rel.toLowerCase().includes(q)) {
+              items.push({ label: path.basename(u.fsPath), path: rel, uri: u.toString() });
+              if (items.length >= MAX_SEARCH_RESULTS) {
+                break;
+              }
+            }
+          }
+        }
+
+        // Echo the query so the webview can drop replies to superseded searches.
+        this.post({ type: "RESULTS", q: query, items });
         return;
       }
 
