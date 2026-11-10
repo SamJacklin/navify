@@ -32,9 +32,6 @@ export function ExplorerPlus() {
     requestDirTree();
   };
 
-  // Load the folder picker as soon as the view opens.
-  useEffect(requestDirTree, []);
-
   // Tell the extension which phase we're in so it can show the title-bar action.
   useEffect(() => {
     post({ type: "EXPLORER_MODE", mode: treeRoots === null ? "pick" : "tree" });
@@ -49,7 +46,8 @@ export function ExplorerPlus() {
     return () => clearTimeout(id);
   }, [justOpenedUri]);
 
-  // Listen for messages from the extension host.
+  // Listen for messages from the extension host. Everything this view asks
+  // for is requested in the effect after this one, once the listener exists.
   useEffect(() => {
     return onMessage((msg) => {
       if (msg.type === "EXPLORER_DIR_TREE") {
@@ -65,6 +63,12 @@ export function ExplorerPlus() {
         setActiveUri(msg.uri);
       }
     });
+  }, []);
+
+  // Request initial state and the folder picker now that the listener is attached.
+  useEffect(() => {
+    post({ type: "READY" });
+    requestDirTree();
   }, []);
 
   const openFile = (uri: string) => {
