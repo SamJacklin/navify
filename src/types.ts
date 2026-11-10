@@ -30,13 +30,18 @@ export interface TreeNode {
   children?: TreeNode[]; // Only present for directories
 }
 
+/** Which Navify view a webview instance renders. */
+export type ViewKind = "search" | "explorer";
+
 // ── Inbound (webview → extension) ────────────────────────────────────────────
 
 export type InboundMessage =
+  | { type: "READY" }
   | { type: "SEARCH"; q: string }
   | { type: "OPEN"; uri: string }
   | { type: "EXPLORER_GET_DIR_TREE" }
-  | { type: "EXPLORER_GET_TREE"; folderUris: string[] };
+  | { type: "EXPLORER_GET_TREE"; folderUris: string[] }
+  | { type: "EXPLORER_MODE"; mode: "pick" | "tree" };
 
 // ── Outbound (extension → webview) ───────────────────────────────────────────
 
@@ -45,4 +50,5 @@ export type OutboundMessage =
   | { type: "RECENT_FILES"; items: FileItemPayload[] }
   | { type: "EXPLORER_DIR_TREE"; roots: DirNode[] }
   | { type: "EXPLORER_TREE"; roots: TreeNode[] }
+  | { type: "EXPLORER_CHANGE_FOLDERS" }
   | { type: "ACTIVE_FILE"; uri: string | null };

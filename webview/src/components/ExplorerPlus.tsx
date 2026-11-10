@@ -1,32 +1,50 @@
 import { useEffect, useState } from "preact/hooks";
 import { onMessage, post, type DirNode, type TreeNode } from "../api";
+import { Row } from "./Row";
+
+const MAX_FOCUSED_FOLDERS = 2;
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-interface ExplorerPlusProps {
-  visible: boolean;
-}
-
-export function ExplorerPlus({ visible }: ExplorerPlusProps) {
+/**
+ * The "Explorer Plus" view: pick up to two folders, then browse just those
+ * folders as a compact tree.
+ */
+export function ExplorerPlus() {
   const [dirRoots, setDirRoots] = useState<DirNode[]>([]);
   const [selectedUris, setSelectedUris] = useState<string[]>([]);
   const [treeRoots, setTreeRoots] = useState<TreeNode[] | null>(null);
   const [treeExpanded, setTreeExpanded] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeUri, setActiveUri] = useState<string | null>(null);
   const [justOpenedUri, setJustOpenedUri] = useState<string | null>(null);
 
-  // Request the directory tree the first time this tab becomes visible.
+  const requestDirTree = () => {
+    setLoading(true);
+    post({ type: "EXPLORER_GET_DIR_TREE" });
+  };
+
+  const changeFolders = () => {
+    setTreeRoots(null);
+    setSelectedUris([]);
+    setTreeExpanded(new Set());
+    // Refetch so folders created since the last pick show up.
+    requestDirTree();
+  };
+
+  // Load the folder picker as soon as the view opens.
+  useEffect(requestDirTree, []);
+
+  // Tell the extension which phase we're in so it can show the title-bar action.
   useEffect(() => {
-    if (visible && dirRoots.length === 0 && treeRoots === null && !loading) {
-      setLoading(true);
-      post({ type: "EXPLORER_GET_DIR_TREE" });
-    }
-  }, [visible]);
+    post({ type: "EXPLORER_MODE", mode: treeRoots === null ? "pick" : "tree" });
+  }, [treeRoots === null]);
 
   // Clear the flash class once the animation has played out.
   useEffect(() => {
-    if (!justOpenedUri) return;
+    if (!justOpenedUri) {
+      return;
+    }
     const id = setTimeout(() => setJustOpenedUri(null), 1200);
     return () => clearTimeout(id);
   }, [justOpenedUri]);
@@ -41,6 +59,8 @@ export function ExplorerPlus({ visible }: ExplorerPlusProps) {
         setTreeRoots(msg.roots);
         setTreeExpanded(new Set());
         setLoading(false);
+      } else if (msg.type === "EXPLORER_CHANGE_FOLDERS") {
+        changeFolders();
       } else if (msg.type === "ACTIVE_FILE") {
         setActiveUri(msg.uri);
       }
@@ -57,8 +77,8 @@ export function ExplorerPlus({ visible }: ExplorerPlusProps) {
       if (prev.includes(uri)) {
         return prev.filter((u) => u !== uri);
       }
-      // Max 2 folders — drop the oldest when at capacity.
-      return prev.length >= 2 ? [prev[1], uri] : [...prev, uri];
+      // Drop the oldest pick when at capacity.
+      return prev.length >= MAX_FOCUSED_FOLDERS ? [...prev.slice(1), uri] : [...prev, uri];
     });
   };
 
@@ -70,37 +90,15 @@ export function ExplorerPlus({ visible }: ExplorerPlusProps) {
     post({ type: "EXPLORER_GET_TREE", folderUris: selectedUris });
   };
 
-  const changeFolders = () => {
-    setTreeRoots(null);
-    setSelectedUris([]);
-    setTreeExpanded(new Set());
-    if (dirRoots.length === 0) {
-      setLoading(true);
-      post({ type: "EXPLORER_GET_DIR_TREE" });
-    }
-  };
-
   const toggleTreeExpand = (uri: string) => {
-    setTreeExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(uri)) {
-        next.delete(uri);
-      } else {
-        next.add(uri);
-      }
-      return next;
-    });
+    setTreeExpanded((prev) => toggled(prev, uri));
   };
 
   return (
-    <div
-      class="tab-content"
-      role="tabpanel"
-      style={{ display: visible ? undefined : "none" }}
-    >
+    <div class="view">
       {loading ? (
         <div class="empty">
-          <div class="empty-title">Loading...</div>
+          <div class="empty-title">Loading…</div>
         </div>
       ) : treeRoots !== null ? (
         <TreeView
@@ -122,6 +120,16 @@ export function ExplorerPlus({ visible }: ExplorerPlusProps) {
       )}
     </div>
   );
+}
+
+function toggled(set: Set<string>, key: string): Set<string> {
+  const next = new Set(set);
+  if (next.has(key)) {
+    next.delete(key);
+  } else {
+    next.add(key);
+  }
+  return next;
 }
 
 // ── Folder browser (picker phase) ─────────────────────────────────────────────
@@ -151,28 +159,15 @@ function DirBrowser({ roots, selectedUris, onSelect, onFocus }: DirBrowserProps)
   }, [roots]);
 
   const toggleExpand = (uri: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(uri)) {
-        next.delete(uri);
-      } else {
-        next.add(uri);
-      }
-      return next;
-    });
+    setExpanded((prev) => toggled(prev, uri));
   };
 
   if (roots.length === 0) {
     return (
-      <>
-        <div class="explorer-toolbar">
-          <span class="explorer-toolbar-label">Explorer Plus</span>
-        </div>
-        <div class="empty">
-          <div class="empty-title">No workspace open</div>
-          <div class="empty-hint">Open a folder to use Explorer Plus</div>
-        </div>
-      </>
+      <div class="empty">
+        <div class="empty-title">No workspace open</div>
+        <div class="empty-hint">Open a folder to use Explorer Plus</div>
+      </div>
     );
   }
 
@@ -180,14 +175,16 @@ function DirBrowser({ roots, selectedUris, onSelect, onFocus }: DirBrowserProps)
 
   return (
     <>
-      <div class="explorer-toolbar">
-        <span class="explorer-toolbar-label">Select folders to focus</span>
+      <div class="section-label">
+        <span>Choose up to {MAX_FOCUSED_FOLDERS} folders</span>
         {selectionCount > 0 && (
-          <span class="explorer-selection-count">{selectionCount}/2</span>
+          <span class="section-label-meta">
+            {selectionCount}/{MAX_FOCUSED_FOLDERS}
+          </span>
         )}
       </div>
 
-      <div class="results">
+      <div class="list" role="tree" aria-multiselectable="true">
         {roots.map((root) => (
           <DirNodeView
             key={root.uri}
@@ -202,9 +199,9 @@ function DirBrowser({ roots, selectedUris, onSelect, onFocus }: DirBrowserProps)
       </div>
 
       {selectionCount > 0 && (
-        <div class="explorer-footer">
-          <button class="explorer-apply-btn" onClick={onFocus}>
-            Focus {selectionCount === 1 ? "folder" : "both folders"}
+        <div class="footer">
+          <button class="primary-button" onClick={onFocus}>
+            {selectionCount === 1 ? "Focus folder" : `Focus ${selectionCount} folders`}
           </button>
         </div>
       )}
@@ -234,20 +231,34 @@ function DirNodeView({
   const isExpanded = expanded.has(node.uri);
   const isSelected = selectedUris.includes(node.uri);
   const hasChildren = node.children.length > 0;
-  const indent = depth * 14;
 
   return (
     <>
-      <div
-        class={`explorer-dir-pick-item${isSelected ? " selected" : ""}`}
-        style={{ paddingLeft: `${16 + indent}px` }}
-        onClick={() => {
-          onSelect(node.uri);
-          if (!isExpanded) onToggleExpand(node.uri);
-      }}
-        role="checkbox"
-        aria-checked={isSelected}
+      <Row
+        label={node.name}
+        depth={depth}
+        twistie={!hasChildren ? "leaf" : isExpanded ? "open" : "closed"}
+        selected={isSelected}
+        meta={
+          isSelected ? (
+            <span class="codicon codicon-check row-check" aria-hidden="true" />
+          ) : undefined
+        }
+        title={node.path}
+        role="treeitem"
+        aria-selected={isSelected}
+        aria-expanded={hasChildren ? isExpanded : undefined}
         tabIndex={0}
+        onClick={(e) => {
+          // Clicking the chevron only expands; clicking the row selects too.
+          const onTwistie = (e.target as HTMLElement).classList.contains("row-twistie");
+          if (!onTwistie) {
+            onSelect(node.uri);
+          }
+          if (hasChildren && (onTwistie || !isExpanded)) {
+            onToggleExpand(node.uri);
+          }
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -257,26 +268,7 @@ function DirNodeView({
             onToggleExpand(node.uri);
           }
         }}
-      >
-        <span
-          class="explorer-expand-arrow"
-          style={{ visibility: hasChildren ? undefined : "hidden" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleExpand(node.uri);
-          }}
-          aria-hidden="true"
-        >
-          {isExpanded ? "▾" : "▸"}
-        </span>
-        <span class="explorer-check" aria-hidden="true">
-          {isSelected ? "✓" : ""}
-        </span>
-        <span class="explorer-item-icon" aria-hidden="true">
-          📁
-        </span>
-        <span class="explorer-item-name">{node.name}</span>
-      </div>
+      />
 
       {isExpanded &&
         node.children.map((child) => (
@@ -315,65 +307,51 @@ function TreeView({
   onOpen,
   onChangeFolders,
 }: TreeViewProps) {
-  const multiRoot = roots.length > 1;
-  const singleRootName = !multiRoot ? roots[0]?.name : null;
-
   const hasAnyFiles = roots.some((r) => (r.children?.length ?? 0) > 0);
 
-  return (
-    <>
-      <div class="explorer-toolbar">
-        <button
-          class="explorer-back-btn"
-          onClick={onChangeFolders}
-          aria-label="Change focused folders"
-        >
-          ← Change
+  if (!hasAnyFiles) {
+    return (
+      <div class="empty">
+        <div class="empty-title">No files found</div>
+        <div class="empty-hint">The selected folder appears to be empty</div>
+        <button class="link-button" onClick={onChangeFolders}>
+          Choose other folders
         </button>
-        {singleRootName && (
-          <span class="explorer-toolbar-label" title={singleRootName}>
-            {singleRootName}
-          </span>
-        )}
       </div>
+    );
+  }
 
-      {!hasAnyFiles ? (
-        <div class="empty">
-          <div class="empty-title">No files found</div>
-          <div class="empty-hint">The selected folder appears to be empty</div>
-        </div>
-      ) : (
-        <div class="results">
-          {roots.map((root, i) => (
-            <div key={root.uri}>
-              {/* Section header separates folders visually when two are focused */}
-              {multiRoot && (
-                <div
-                  class={`explorer-section${i > 0 ? " explorer-section--divided" : ""}`}
-                >
-                  <span class="explorer-item-icon" aria-hidden="true">
-                    📁
-                  </span>
-                  <span class="explorer-section-label">{root.name}</span>
-                </div>
-              )}
-              {(root.children ?? []).map((child) => (
-                <TreeNodeView
-                  key={child.uri}
-                  node={child}
-                  depth={0}
-                  expanded={expanded}
-                  activeUri={activeUri}
-                  justOpenedUri={justOpenedUri}
-                  onToggle={onToggle}
-                  onOpen={onOpen}
-                />
-              ))}
-            </div>
+  return (
+    <div class="list" role="tree">
+      {roots.map((root, i) => (
+        <div key={root.uri} role="group" aria-label={root.name}>
+          <div class={`section-label${i > 0 ? " section-label--divided" : ""}`}>
+            <span title={root.path}>{root.name}</span>
+            {i === 0 && (
+              <button
+                class="link-button section-label-meta"
+                onClick={onChangeFolders}
+                title="Change focused folders"
+              >
+                Change
+              </button>
+            )}
+          </div>
+          {(root.children ?? []).map((child) => (
+            <TreeNodeView
+              key={child.uri}
+              node={child}
+              depth={0}
+              expanded={expanded}
+              activeUri={activeUri}
+              justOpenedUri={justOpenedUri}
+              onToggle={onToggle}
+              onOpen={onOpen}
+            />
           ))}
         </div>
-      )}
-    </>
+      ))}
+    </div>
   );
 }
 
@@ -398,69 +376,47 @@ function TreeNodeView({
   onToggle,
   onOpen,
 }: TreeNodeViewProps) {
-  const indent = depth * 14;
-
   if (node.type === "file") {
-    const isActive = activeUri === node.uri;
-    const isJustOpened = justOpenedUri === node.uri;
-
-    const itemClass = [
-      "explorer-item",
-      isActive ? "explorer-item--active" : "",
-      isJustOpened ? "explorer-item--flash" : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-
     return (
-      <div
-        class={itemClass}
-        style={{ paddingLeft: `${16 + indent}px` }}
-        onClick={() => onOpen(node.uri)}
-        role="button"
+      <Row
+        label={node.name}
+        depth={depth}
+        twistie="leaf"
+        title={node.path}
+        active={activeUri === node.uri}
+        flash={justOpenedUri === node.uri}
+        role="treeitem"
         tabIndex={0}
+        onClick={() => onOpen(node.uri)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             onOpen(node.uri);
           }
         }}
-      >
-        <span class="explorer-spacer" aria-hidden="true" />
-        <span class="explorer-item-icon" aria-hidden="true">
-          📄
-        </span>
-        <span class="explorer-item-name">{node.name}</span>
-      </div>
+      />
     );
   }
 
-  // Directory node
   const isExpanded = expanded.has(node.uri);
 
   return (
     <>
-      <div
-        class={`explorer-item explorer-dir-item${isExpanded ? " expanded" : ""}`}
-        style={{ paddingLeft: `${16 + indent}px` }}
-        onClick={() => onToggle(node.uri)}
-        role="button"
+      <Row
+        label={node.name}
+        depth={depth}
+        twistie={isExpanded ? "open" : "closed"}
+        title={node.path}
+        role="treeitem"
         aria-expanded={isExpanded}
         tabIndex={0}
+        onClick={() => onToggle(node.uri)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             onToggle(node.uri);
           }
         }}
-      >
-        <span class="explorer-arrow" aria-hidden="true">
-          {isExpanded ? "▾" : "▸"}
-        </span>
-        <span class="explorer-item-icon" aria-hidden="true">
-          📁
-        </span>
-        <span class="explorer-item-name">{node.name}</span>
-      </div>
+      />
 
       {isExpanded &&
         node.children?.map((child) => (

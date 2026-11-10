@@ -21,16 +21,19 @@ export interface TreeNode {
 }
 
 export type ToExtension =
+  | { type: "READY" }
   | { type: "SEARCH"; q: string }
   | { type: "OPEN"; uri: string }
   | { type: "EXPLORER_GET_DIR_TREE" }
-  | { type: "EXPLORER_GET_TREE"; folderUris: string[] };
+  | { type: "EXPLORER_GET_TREE"; folderUris: string[] }
+  | { type: "EXPLORER_MODE"; mode: "pick" | "tree" };
 
 export type FromExtension =
   | { type: "RESULTS"; items: ResultItem[] }
   | { type: "RECENT_FILES"; items: ResultItem[] }
   | { type: "EXPLORER_DIR_TREE"; roots: DirNode[] }
   | { type: "EXPLORER_TREE"; roots: TreeNode[] }
+  | { type: "EXPLORER_CHANGE_FOLDERS" }
   | { type: "ACTIVE_FILE"; uri: string | null };
 
 const vscode = acquireVsCodeApi();
