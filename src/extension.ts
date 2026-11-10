@@ -1,17 +1,22 @@
 import * as vscode from "vscode";
 import { buildFileIndex, getFileIndex } from "./indexing/fileIndex";
 import { RecentFilesTracker } from "./recentFiles/RecentFilesTracker";
-import { NavifySearchViewProvider } from "./webview/NavifySearchViewProvider";
+import { NavifyViewProvider } from "./webview/NavifyViewProvider";
 import { showFuzzyFilePicker } from "./quickpick/showFuzzyFilePicker";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   buildFileIndex().catch((err) => console.error("[Navify] index error:", err));
 
   const recentFiles = new RecentFilesTracker();
-  const provider = new NavifySearchViewProvider(context, recentFiles);
+  const searchView = new NavifyViewProvider(context, recentFiles, "search");
+  const explorerView = new NavifyViewProvider(context, recentFiles, "explorer");
+  const views = [searchView, explorerView];
 
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("navify.searchView", provider, {
+    vscode.window.registerWebviewViewProvider("navify.searchView", searchView, {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
+    vscode.window.registerWebviewViewProvider("navify.explorerView", explorerView, {
       webviewOptions: { retainContextWhenHidden: true },
     })
   );
@@ -21,10 +26,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor?.document.uri) {
         recentFiles.add(editor.document.uri);
-        provider.sendRecentFiles();
       }
-      // Always notify — null when no editor is active.
-      provider.sendActiveFile();
+      for (const view of views) {
+        if (editor?.document.uri) {
+          view.sendRecentFiles();
+        }
+        // Always notify — null when no editor is active.
+        view.sendActiveFile();
+      }
     })
   );
 
@@ -32,7 +41,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.workspace.onDidOpenTextDocument((doc) => {
       if (doc.uri) {
         recentFiles.add(doc.uri);
-        provider.sendRecentFiles();
+        views.forEach((view) => view.sendRecentFiles());
       }
     })
   );
@@ -67,6 +76,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         "workbench.view.extension.navify-container"
       );
       await vscode.commands.executeCommand("navify.searchView.focus");
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("navify.explorer.changeFolders", () => {
+      explorerView.post({ type: "EXPLORER_CHANGE_FOLDERS" });
     })
   );
 }

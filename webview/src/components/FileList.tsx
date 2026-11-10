@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "preact/hooks";
 import { post, type ResultItem } from "../api";
+import { Row } from "./Row";
 
 interface FileListProps {
   items: ResultItem[];
@@ -11,17 +12,24 @@ interface FileListProps {
   };
 }
 
-export function FileList({ items, selectedIndex, onSelectedIndexChange, emptyState }: FileListProps) {
+/** Folder part of a workspace-relative path, shown muted beside the file name. */
+function parentDir(relPath: string): string {
+  const i = relPath.lastIndexOf("/");
+  return i > 0 ? relPath.slice(0, i) : "";
+}
+
+export function FileList({
+  items,
+  selectedIndex,
+  onSelectedIndexChange,
+  emptyState,
+}: FileListProps) {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Scroll selected item into view
   useEffect(() => {
-    if (resultsRef.current && items.length > 0) {
-      const selectedEl = resultsRef.current.querySelector(`[data-index="${selectedIndex}"]`);
-      if (selectedEl) {
-        selectedEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      }
-    }
+    const selectedEl = resultsRef.current?.querySelector(`[data-index="${selectedIndex}"]`);
+    selectedEl?.scrollIntoView({ block: "nearest" });
   }, [selectedIndex, items]);
 
   if (items.length === 0 && emptyState) {
@@ -34,20 +42,20 @@ export function FileList({ items, selectedIndex, onSelectedIndexChange, emptySta
   }
 
   return (
-    <div class="results" ref={resultsRef} role="listbox">
+    <div class="list" ref={resultsRef} role="listbox">
       {items.map((item, index) => (
-        <div
+        <Row
           key={item.uri}
           data-index={index}
-          class={`result-item ${index === selectedIndex ? "selected" : ""}`}
+          label={item.label}
+          meta={parentDir(item.path)}
+          title={item.path}
+          selected={index === selectedIndex}
           role="option"
           aria-selected={index === selectedIndex}
           onClick={() => post({ type: "OPEN", uri: item.uri })}
           onMouseEnter={() => onSelectedIndexChange(index)}
-        >
-          <div class="result-label">{item.label}</div>
-          <div class="result-path">{item.path}</div>
-        </div>
+        />
       ))}
     </div>
   );

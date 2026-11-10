@@ -17,7 +17,7 @@ const ctx = await esbuild.context({
   minify: !watch,
   outdir: path.join(__dirname, "..", "media", "webview", "dist"),
   entryNames: "main",
-  loader: { ".css": "css" }
+  loader: { ".css": "css", ".ttf": "file" }
 });
 
 if (watch) {

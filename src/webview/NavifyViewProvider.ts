@@ -1,17 +1,22 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { DirNode, OutboundMessage, TreeNode } from "../types";
+import { DirNode, OutboundMessage, TreeNode, ViewKind } from "../types";
 import { getFileIndex } from "../indexing/fileIndex";
 import { isJunkPath } from "../indexing/isJunkPath";
 import { RecentFilesTracker } from "../recentFiles/RecentFilesTracker";
 import { getHtml } from "./html";
 
-export class NavifySearchViewProvider implements vscode.WebviewViewProvider {
+/**
+ * Backs one Navify sidebar view. Every view shares the same webview bundle and
+ * message protocol; `kind` decides which UI the bundle renders.
+ */
+export class NavifyViewProvider implements vscode.WebviewViewProvider {
   private webview?: vscode.Webview;
 
   constructor(
     private readonly ctx: vscode.ExtensionContext,
-    private readonly recentFiles: RecentFilesTracker
+    private readonly recentFiles: RecentFilesTracker,
+    private readonly kind: ViewKind
   ) {}
 
   async resolveWebviewView(webviewView: vscode.WebviewView): Promise<void> {
@@ -23,7 +28,7 @@ export class NavifySearchViewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [vscode.Uri.joinPath(this.ctx.extensionUri, "media")],
     };
 
-    webview.html = await getHtml(webview, this.ctx.extensionUri);
+    webview.html = await getHtml(webview, this.ctx.extensionUri, this.kind);
 
     // Push current state as soon as the view is ready.
     this.sendRecentFiles();
@@ -35,7 +40,26 @@ export class NavifySearchViewProvider implements vscode.WebviewViewProvider {
         q?: string;
         uri?: string;
         folderUris?: string[];
+        mode?: string;
       } | null;
+
+      if (msg?.type === "READY") {
+        // The webview's listener is now attached, so state sent above may have
+        // been dropped; send it again.
+        this.sendRecentFiles();
+        this.sendActiveFile();
+        return;
+      }
+
+      if (msg?.type === "EXPLORER_MODE") {
+        // Drives the "Change Focused Folders" button in the view title bar.
+        await vscode.commands.executeCommand(
+          "setContext",
+          "navify.explorerFocused",
+          msg.mode === "tree"
+        );
+        return;
+      }
 
       if (msg?.type === "SEARCH") {
         const cfg = vscode.workspace.getConfiguration("navify");
@@ -94,23 +118,17 @@ export class NavifySearchViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
+  post(message: OutboundMessage): void {
+    this.webview?.postMessage(message);
+  }
+
   sendRecentFiles(): void {
-    if (!this.webview) {
-      return;
-    }
-    const message: OutboundMessage = {
-      type: "RECENT_FILES",
-      items: this.recentFiles.toPayload(),
-    };
-    this.webview.postMessage(message);
+    this.post({ type: "RECENT_FILES", items: this.recentFiles.toPayload() });
   }
 
   sendActiveFile(): void {
-    if (!this.webview) {
-      return;
-    }
     const uri = vscode.window.activeTextEditor?.document.uri?.toString() ?? null;
-    this.webview.postMessage({ type: "ACTIVE_FILE", uri } as OutboundMessage);
+    this.post({ type: "ACTIVE_FILE", uri });
   }
 }
 
