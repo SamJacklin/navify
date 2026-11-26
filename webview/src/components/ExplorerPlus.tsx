@@ -81,8 +81,11 @@ export function ExplorerPlus() {
       if (prev.includes(uri)) {
         return prev.filter((u) => u !== uri);
       }
+      // A folder and its own subfolder would list the same files twice, so
+      // the new pick replaces any folder it contains or sits inside.
+      const rest = prev.filter((u) => !isSameOrInside(u, uri) && !isSameOrInside(uri, u));
       // Drop the oldest pick when at capacity.
-      return prev.length >= MAX_FOCUSED_FOLDERS ? [...prev.slice(1), uri] : [...prev, uri];
+      return rest.length >= MAX_FOCUSED_FOLDERS ? [...rest.slice(1), uri] : [...rest, uri];
     });
   };
 
@@ -124,6 +127,10 @@ export function ExplorerPlus() {
       )}
     </div>
   );
+}
+
+function isSameOrInside(uri: string, folder: string): boolean {
+  return uri === folder || uri.startsWith(folder.endsWith("/") ? folder : folder + "/");
 }
 
 function toggled(set: Set<string>, key: string): Set<string> {
