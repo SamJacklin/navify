@@ -27,11 +27,11 @@ Fuzzy file search across the full workspace, directly in the panel.
 
 ### Recently Opened Files
 
-A lightweight list of files accessed in the current session.
+A lightweight list of the files you last opened in this workspace.
 
 - Automatically tracked, no setup required
 - Reduces back-and-forth when cycling through a small set of files
-- Resets on workspace reload
+- Kept per workspace across reloads; deleted files drop off and renamed files are followed
 
 ---
 
