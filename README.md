@@ -72,3 +72,9 @@ The default `excludeGlobs` covers common build artefacts and tooling directories
 Navify is not yet published to the VS Code Marketplace.
 
 To run it locally, clone the repository and open it in VS Code, then press `F5` to launch an Extension Development Host with Navify loaded.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the development loop and the review checklist.
