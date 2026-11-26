@@ -3,13 +3,49 @@ import * as path from "path";
 import { FileItemPayload } from "../types";
 
 const MAX_RECENT_FILES = 20;
+const STORAGE_KEY = "navify.recentFiles";
 
 /**
- * Tracks recently opened workspace files, newest-first.
- * Keeps state encapsulated so it can be injected into whoever needs it.
+ * Tracks recently opened workspace files, newest-first, and keeps them in
+ * workspace storage so the list survives a reload.
  */
 export class RecentFilesTracker {
-  private files: vscode.Uri[] = [];
+  private files: vscode.Uri[];
+
+  constructor(private readonly storage: vscode.Memento) {
+    const stored: unknown = storage.get(STORAGE_KEY);
+    this.files = Array.isArray(stored)
+      ? stored
+          .filter((s): s is string => typeof s === "string")
+          .map((s) => vscode.Uri.parse(s))
+          .filter((u) => vscode.workspace.getWorkspaceFolder(u))
+      : [];
+  }
+
+  /**
+   * Drops stored files that were deleted or moved while VS Code was closed.
+   * Returns whether anything was removed.
+   */
+  async pruneMissing(): Promise<boolean> {
+    const checked = [...this.files];
+    const exists = await Promise.all(
+      checked.map((u) =>
+        vscode.workspace.fs.stat(u).then(
+          () => true,
+          () => false
+        )
+      )
+    );
+    const missing = new Set(checked.filter((_, i) => !exists[i]).map((u) => u.toString()));
+    if (missing.size === 0) {
+      return false;
+    }
+    // Filter the current list, not the checked copy: files may have been
+    // opened while the checks ran.
+    this.files = this.files.filter((u) => !missing.has(u.toString()));
+    this.save();
+    return true;
+  }
 
   /**
    * Record a file as recently opened.
@@ -31,11 +67,21 @@ export class RecentFilesTracker {
     if (this.files.length > MAX_RECENT_FILES) {
       this.files = this.files.slice(0, MAX_RECENT_FILES);
     }
+    this.save();
   }
 
-  /** Drop a deleted file, or every file under a deleted folder. */
-  remove(uri: vscode.Uri): void {
-    this.files = this.files.filter((u) => !isSameOrInside(u, uri));
+  /**
+   * Drop a deleted file, or every file under a deleted folder.
+   * Returns whether anything was removed.
+   */
+  remove(uri: vscode.Uri): boolean {
+    const kept = this.files.filter((u) => !isSameOrInside(u, uri));
+    if (kept.length === this.files.length) {
+      return false;
+    }
+    this.files = kept;
+    this.save();
+    return true;
   }
 
   /** Follow a rename or move of a file, or of a folder containing files. */
@@ -46,6 +92,16 @@ export class RecentFilesTracker {
         ? vscode.Uri.parse(newUri.toString() + u.toString().slice(oldPath.length))
         : u
     );
+    this.save();
+  }
+
+  private save(): void {
+    this.storage
+      .update(
+        STORAGE_KEY,
+        this.files.map((u) => u.toString())
+      )
+      .then(undefined, (err) => console.error("[Navify] could not save recent files:", err));
   }
 
   /** Serialise to the JSON-safe shape expected by the webview. */

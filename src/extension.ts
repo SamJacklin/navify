@@ -8,7 +8,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   buildFileIndex().catch((err) => console.error("[Navify] index error:", err));
   context.subscriptions.push(watchFileIndex());
 
-  const recentFiles = new RecentFilesTracker();
+  const recentFiles = new RecentFilesTracker(context.workspaceState);
   const searchView = new NavifyViewProvider(context, recentFiles, "search");
   const explorerView = new NavifyViewProvider(context, recentFiles, "explorer");
   const views = [searchView, explorerView];
@@ -47,14 +47,25 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     deleteWatcher,
     deleteWatcher.onDidDelete((uri) => {
-      recentFiles.remove(uri);
-      views.forEach((view) => view.sendRecentFiles());
+      if (recentFiles.remove(uri)) {
+        views.forEach((view) => view.sendRecentFiles());
+      }
     }),
     vscode.workspace.onDidRenameFiles((e) => {
       e.files.forEach(({ oldUri, newUri }) => recentFiles.rename(oldUri, newUri));
       views.forEach((view) => view.sendRecentFiles());
     })
   );
+
+  // The stored list may name files deleted while VS Code was closed.
+  recentFiles
+    .pruneMissing()
+    .then((changed) => {
+      if (changed) {
+        views.forEach((view) => view.sendRecentFiles());
+      }
+    })
+    .catch((err) => console.error("[Navify] recent files error:", err));
 
   // Seed with the file that is already open when the extension activates.
   if (vscode.window.activeTextEditor?.document.uri) {

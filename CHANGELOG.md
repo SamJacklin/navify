@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Quick pick jumped back to the first item when a preview loaded, and showed garbage previews for binary files
 - Recent files picked up documents opened in the background by other extensions, and kept deleted or renamed files
 - Tests were excluded from compilation, so `npm test` never ran any; added `npm run test:unit`
+- Recent files were lost on reload; they are now kept per workspace, and files deleted while VS Code was closed are dropped
 
 ---
 
