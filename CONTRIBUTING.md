@@ -90,7 +90,9 @@ or `OPEN`, and the host replies with messages such as `RESULTS` or `RECENT_FILES
    `README.md` when you change a command, setting or feature description.
 4. **Open a PR against `main`.** Say what changed and why, and how you tested it. Include
    screenshots in light and dark themes for any UI change. List anything you found but didn't fix.
-5. **Stay rebased on `main`.** PRs are merged with *Rebase and merge*, so keep each commit
+5. **Check your change against Part 2.** If you use Claude Code, the `/check-guidelines` skill in
+   `.claude/skills/` reviews a branch against this guide.
+6. **Stay rebased on `main`.** PRs are merged with *Rebase and merge*, so keep each commit
    meaningful and passing the checks on its own.
 
 ---
