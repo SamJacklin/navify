@@ -23,3 +23,6 @@ coverage/
 
 # Local UI screenshots (regenerated, not committed)
 .screenshots/
+
+# Claude Code
+.claude/*
