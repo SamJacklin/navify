@@ -7,7 +7,7 @@ declare global {
 
   interface Window {
     /** Which Navify view this webview renders; injected by `src/webview/html.ts`. */
-    __NAVIFY_VIEW__?: "search" | "explorer";
+    __NAVIFY_VIEW__?: "search" | "structure" | "explorer";
   }
 }
 

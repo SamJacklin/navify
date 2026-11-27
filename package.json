@@ -12,6 +12,7 @@
   "main": "./out/extension.js",
   "activationEvents": [
     "onView:navify.searchView",
+    "onView:navify.structureView",
     "onView:navify.explorerView",
     "onCommand:navify.focus",
     "onCommand:navify.searchFiles"
@@ -98,6 +99,12 @@
         },
         {
           "type": "webview",
+          "id": "navify.structureView",
+          "name": "Structure",
+          "icon": "media/logo.png"
+        },
+        {
+          "type": "webview",
           "id": "navify.explorerView",
           "name": "Explorer Plus",
           "icon": "media/logo.png"
@@ -117,6 +124,10 @@
         "command": "navify.explorer.changeFolders",
         "title": "Change Focused Folders",
         "icon": "$(arrow-left)"
+      },
+      {
+        "command": "navify.explorer.focusFolder",
+        "title": "Focus Folder in Explorer Plus"
       }
     ],
     "menus": {
@@ -126,6 +137,10 @@
         },
         {
           "command": "navify.explorer.changeFolders",
+          "when": "false"
+        },
+        {
+          "command": "navify.explorer.focusFolder",
           "when": "false"
         }
       ],

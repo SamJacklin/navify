@@ -241,6 +241,18 @@ button {
   color: var(--fg-muted);
 }
 
+/* Inline actions appear on hover or focus, like native tree item actions. */
+.row-actions {
+  display: none;
+  flex-shrink: 0;
+  margin-right: -4px; /* icon buttons carry their own padding */
+}
+
+.row:hover .row-actions,
+.row:focus-within .row-actions {
+  display: flex;
+}
+
 .row-check {
   font-size: 14px;
   color: var(--focus);

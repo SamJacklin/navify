@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Structure view** — a project map of top-level folders and packages, with file counts, main file types and key files (README, manifest, entry points); any area can be focused in Explorer Plus
 - **Recently opened files view** — automatically tracked session history for quick return navigation, acting as a working memory layer
 - **Explorer Plus component** — focused folder view allowing users to select one or two folders as an active workspace subset
 - **Keyboard-first file search** — tab-based panel layout with fast fuzzy matching, immediate filtering, and quick-open behaviour

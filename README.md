@@ -6,6 +6,17 @@ A focused file navigation panel for VS Code. Navify sits in the Activity Bar alo
 
 ## Features
 
+### Structure
+
+A map of the project, for finding your way around before you start working in one part of it.
+
+- Shows the project's areas: top-level folders, plus every package found inside them (any folder with a `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, `.csproj` and similar)
+- Each area shows how many files it holds and its most common file types
+- Expand an area to see its sub-packages and key files: the README, the manifest and entry points such as `index.ts` or `main.py`
+- The area containing the file you have open is highlighted
+- Hover an area and choose **Focus in Explorer Plus** to start working in it
+- Updates as files are added and removed
+
 ### Explorer Plus
 
 Focus on one or two folders at a time without restructuring your workspace. Navigate a folder picker to choose your scope, then browse only those files in a compact tree. When you open a file, it is highlighted in the tree. If a file is already open in the editor when you open the view, that is highlighted too.
