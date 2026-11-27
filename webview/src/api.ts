@@ -20,13 +20,27 @@ export interface TreeNode {
   children?: TreeNode[];
 }
 
+/** An area in the Structure view's project map. */
+export interface StructureNode {
+  name: string;
+  path: string;
+  uri: string;
+  kind: "root" | "package" | "tests" | "docs" | "folder";
+  fileCount: number;
+  languages: string[];
+  keyFiles: { name: string; path: string; uri: string; role: "readme" | "manifest" | "entry" }[];
+  children: StructureNode[];
+}
+
 export type ToExtension =
   | { type: "READY" }
   | { type: "SEARCH"; q: string }
   | { type: "OPEN"; uri: string }
   | { type: "EXPLORER_GET_DIR_TREE" }
   | { type: "EXPLORER_GET_TREE"; folderUris: string[] }
-  | { type: "EXPLORER_MODE"; mode: "pick" | "tree" };
+  | { type: "EXPLORER_MODE"; mode: "pick" | "tree" }
+  | { type: "STRUCTURE_GET" }
+  | { type: "FOCUS_IN_EXPLORER"; uri: string };
 
 export type FromExtension =
   | { type: "RESULTS"; q: string; items: ResultItem[] }
@@ -34,6 +48,8 @@ export type FromExtension =
   | { type: "EXPLORER_DIR_TREE"; roots: DirNode[] }
   | { type: "EXPLORER_TREE"; roots: TreeNode[] }
   | { type: "EXPLORER_CHANGE_FOLDERS" }
+  | { type: "EXPLORER_FOCUS"; folderUris: string[] }
+  | { type: "STRUCTURE"; roots: StructureNode[] }
   | { type: "ACTIVE_FILE"; uri: string | null };
 
 const vscode = acquireVsCodeApi();

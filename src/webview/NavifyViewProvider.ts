@@ -3,6 +3,7 @@ import * as path from "path";
 import { DirNode, FileItemPayload, OutboundMessage, TreeNode, ViewKind } from "../types";
 import { getFileIndex, whenIndexReady } from "../indexing/fileIndex";
 import { RecentFilesTracker } from "../recentFiles/RecentFilesTracker";
+import { buildStructurePayload } from "../structure/structurePayload";
 import { getHtml } from "./html";
 
 const MAX_SEARCH_RESULTS = 300;
@@ -13,6 +14,8 @@ const MAX_SEARCH_RESULTS = 300;
  */
 export class NavifyViewProvider implements vscode.WebviewViewProvider {
   private webview?: vscode.Webview;
+  /** Folders to focus, kept until the Explorer Plus webview acts on them. */
+  private pendingFocus?: string[];
 
   constructor(
     private readonly ctx: vscode.ExtensionContext,
@@ -49,6 +52,20 @@ export class NavifyViewProvider implements vscode.WebviewViewProvider {
         // been dropped; send it again.
         this.sendRecentFiles();
         this.sendActiveFile();
+        if (this.pendingFocus) {
+          this.post({ type: "EXPLORER_FOCUS", folderUris: this.pendingFocus });
+        }
+        return;
+      }
+
+      if (msg?.type === "STRUCTURE_GET") {
+        await whenIndexReady();
+        this.sendStructure();
+        return;
+      }
+
+      if (msg?.type === "FOCUS_IN_EXPLORER" && msg.uri) {
+        await vscode.commands.executeCommand("navify.explorer.focusFolder", msg.uri);
         return;
       }
 
@@ -112,6 +129,7 @@ export class NavifyViewProvider implements vscode.WebviewViewProvider {
       }
 
       if (msg?.type === "EXPLORER_GET_TREE" && Array.isArray(msg.folderUris)) {
+        this.pendingFocus = undefined;
         const roots = buildExplorerTree(msg.folderUris);
         webview.postMessage({
           type: "EXPLORER_TREE",
@@ -128,6 +146,21 @@ export class NavifyViewProvider implements vscode.WebviewViewProvider {
 
   sendRecentFiles(): void {
     this.post({ type: "RECENT_FILES", items: this.recentFiles.toPayload() });
+  }
+
+  sendStructure(): void {
+    if (this.webview) {
+      this.post({ type: "STRUCTURE", roots: buildStructurePayload() });
+    }
+  }
+
+  /**
+   * Shows the given folders in Explorer Plus. The webview may not be listening
+   * yet if the view was only just revealed, so the request is resent on READY.
+   */
+  focusFolders(folderUris: string[]): void {
+    this.pendingFocus = folderUris;
+    this.post({ type: "EXPLORER_FOCUS", folderUris });
   }
 
   sendActiveFile(): void {

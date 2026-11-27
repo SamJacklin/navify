@@ -1,5 +1,10 @@
 import * as vscode from "vscode";
-import { buildFileIndex, getFileIndex, watchFileIndex } from "./indexing/fileIndex";
+import {
+  buildFileIndex,
+  getFileIndex,
+  onDidChangeFileIndex,
+  watchFileIndex,
+} from "./indexing/fileIndex";
 import { RecentFilesTracker } from "./recentFiles/RecentFilesTracker";
 import { NavifyViewProvider } from "./webview/NavifyViewProvider";
 import { showFuzzyFilePicker } from "./quickpick/showFuzzyFilePicker";
@@ -10,17 +15,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   const recentFiles = new RecentFilesTracker();
   const searchView = new NavifyViewProvider(context, recentFiles, "search");
+  const structureView = new NavifyViewProvider(context, recentFiles, "structure");
   const explorerView = new NavifyViewProvider(context, recentFiles, "explorer");
-  const views = [searchView, explorerView];
+  const views = [searchView, structureView, explorerView];
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("navify.searchView", searchView, {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
+    vscode.window.registerWebviewViewProvider("navify.structureView", structureView, {
       webviewOptions: { retainContextWhenHidden: true },
     }),
     vscode.window.registerWebviewViewProvider("navify.explorerView", explorerView, {
       webviewOptions: { retainContextWhenHidden: true },
     })
   );
+
+  context.subscriptions.push(onDidChangeFileIndex(() => structureView.sendStructure()));
 
   // Track recently opened files from editor focus only. `onDidOpenTextDocument`
   // also fires when extensions load documents in the background (hovers, peek,
@@ -92,6 +103,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     vscode.commands.registerCommand("navify.explorer.changeFolders", () => {
       explorerView.post({ type: "EXPLORER_CHANGE_FOLDERS" });
+    }),
+    vscode.commands.registerCommand("navify.explorer.focusFolder", async (uri: unknown) => {
+      if (typeof uri !== "string") {
+        return;
+      }
+      await vscode.commands.executeCommand("navify.explorerView.focus");
+      explorerView.focusFolders([uri]);
     })
   );
 }

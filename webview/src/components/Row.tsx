@@ -23,6 +23,8 @@ interface RowProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "label" | "i
   active?: boolean;
   /** Brief highlight after opening. */
   flash?: boolean;
+  /** Icon buttons shown at the right edge while the row is hovered or focused. */
+  actions?: ComponentChildren;
 }
 
 /**
@@ -39,6 +41,7 @@ export function Row({
   checked,
   active,
   flash,
+  actions,
   class: extraClass,
   style,
   ...rest
@@ -76,6 +79,7 @@ export function Row({
       {icon && <span class={`row-icon codicon codicon-${icon}`} aria-hidden="true" />}
       <span class="row-label">{label}</span>
       {meta !== undefined && meta !== "" && <span class="row-meta">{meta}</span>}
+      {actions && <span class="row-actions">{actions}</span>}
     </div>
   );
 }

@@ -59,6 +59,10 @@ export function ExplorerPlus() {
         setLoading(false);
       } else if (msg.type === "EXPLORER_CHANGE_FOLDERS") {
         changeFolders();
+      } else if (msg.type === "EXPLORER_FOCUS") {
+        setSelectedUris(msg.folderUris);
+        setLoading(true);
+        post({ type: "EXPLORER_GET_TREE", folderUris: msg.folderUris });
       } else if (msg.type === "ACTIVE_FILE") {
         setActiveUri(msg.uri);
       }

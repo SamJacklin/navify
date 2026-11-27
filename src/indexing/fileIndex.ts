@@ -14,6 +14,10 @@ let hasFullIndex = false;
 let fullBuildGeneration = 0;
 let inFlightFullBuild: Promise<void> | undefined;
 
+const indexChanged = new vscode.EventEmitter<void>();
+/** Fires whenever a build replaces the index. */
+export const onDidChangeFileIndex = indexChanged.event;
+
 export function getFileIndex(): vscode.Uri[] {
   return fileIndex;
 }
@@ -33,6 +37,7 @@ export function buildFileIndex(opts?: { fast?: boolean }): Promise<void> {
     return scan(true).then((uris) => {
       if (!hasFullIndex) {
         fileIndex = uris;
+        indexChanged.fire();
       }
     });
   }
@@ -42,6 +47,7 @@ export function buildFileIndex(opts?: { fast?: boolean }): Promise<void> {
     if (generation === fullBuildGeneration) {
       fileIndex = uris;
       hasFullIndex = true;
+      indexChanged.fire();
     }
   });
   inFlightFullBuild = build;
